@@ -63,17 +63,17 @@ void GameState::event(const sf::Event& ev)
 }
 void GameState::tick(const Timespan& dt)
 {
-	if (Clock::now() > mNextExec)
+	if (Clock::now() >= mNextExec)
 	{
-		if (mRobot.execute(mCurCommand))
+		std::string name = mRobot.getProgram()->getName(mCurCommand);
+		if (mRobot.execute(mCurCommand) || !name.empty())
 		{
-			std::string name = mRobot.getProgram()->getName(mCurCommand);
-
 			mHistory.push_front(name);
 			if (mHistory.size() > 5)
 				mHistory.pop_back();
 
-			getEngine().get<ScriptManager>().runHook<const std::string*, const std::string*>("OnCommand", &mCurCommand, &name);
+			if (!mCurCommand.empty())
+				getEngine().get<ScriptManager>().runHook<const std::string*, const std::string*>("OnCommand", &mCurCommand, &name);
 			mTick.setVolume(50);
 		}
 		else
@@ -86,16 +86,22 @@ void GameState::tick(const Timespan& dt)
 		mNextExec = Clock::now() + std::chrono::seconds(1);
 
 		if (mDir > 0)
+		{
 			mDir = -1;
+			mOff = 100;
+		}
 		else
+		{
 			mDir = 1;
+			mOff = 0;
+		}
 	}
 
 	mRobot.tick(dt);
 }
 void GameState::update(const Timespan& dt)
 {
-	mDot += std::min(std::max(mDir * Time::Seconds(dt), -1.f), 1.f);
+	mDot = 1-Time::Seconds(mNextExec - Clock::now());
 
 	mPreParticles.update(dt);
 	mPostParticles.update(dt);
@@ -106,6 +112,7 @@ void GameState::draw(sf::RenderTarget& target)
 	view.move((mRobot.getPosition() - view.getCenter()) * 0.001f);
 
 	target.setView(view);
+	target.clear(sf::Color(0x4A, 0x70, 0x23));
 
 	mPreParticles.draw(target);
 
@@ -118,7 +125,7 @@ void GameState::drawUI(sf::RenderTarget& target)
 {
 	sf::CircleShape dot(10);
 
-	dot.setPosition(target.getView().getSize().x - 25 - mDot * 100, 5);
+	dot.setPosition(target.getView().getSize().x - 25 - mDot * 100 * mDir - mOff, 5);
 	float scale = std::abs(0.5 - mDot);
 	dot.scale((1 - scale) / 2, 0.5 + scale);
 
@@ -133,7 +140,7 @@ void GameState::drawUI(sf::RenderTarget& target)
 	target.draw(commandString);
 
 	commandString.setCharacterSize(12);
-	commandString.setPosition(target.getView().getSize().x - 75, 30);
+	commandString.setPosition(target.getView().getSize().x - 75, 50);
 
 	for (auto& it : mHistory)
 	{

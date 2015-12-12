@@ -11,7 +11,7 @@ namespace
 	static const ParticleManager::Particle TRACK_PARTICLE{
 		std::chrono::seconds(2),
 		{ 8, 2 },
-		{ 64, 64, 64, 255 },
+		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
 		0, 0

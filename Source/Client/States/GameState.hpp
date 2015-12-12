@@ -30,7 +30,7 @@ private:
 	std::list<std::string> mScripts;
 	std::list<std::string> mHistory;
 
-	float mDot, mDir;
+	float mDot, mDir, mOff;
 
 	sf::Sound mTick;
 	ResourceManager::Sound mTickResource;

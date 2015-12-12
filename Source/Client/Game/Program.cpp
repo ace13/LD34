@@ -15,9 +15,14 @@ bool Program::execute(const std::string& command, Robot& actor)
 const std::string& Program::getName(const std::string& opcode) const
 {
 	static const std::string Invalid = "";
+	static const std::string Nop = "NOP";
+
 	if (mOpcodes.count(opcode))
 		return mOpcodes.at(opcode).Name;
-	return Invalid;
+	else if (opcode.empty())
+		return Invalid;
+	else
+		return Nop;
 }
 
 void Program::addOpcode(const std::string& op, const std::string& name, const std::function<void(Robot&)>& func)
@@ -27,6 +32,7 @@ void Program::addOpcode(const std::string& op, const std::string& name, const st
 
 BaseProgram::BaseProgram()
 {
+	auto nop = [](Robot&r) {};
 	addOpcode("0", "STOP", [](Robot& r) { r.setSpeed(0); });
 	addOpcode("1", "MOVE", [](Robot& r) { r.setSpeed(1); });
 	addOpcode("01", "TURN_LEFT",  [](Robot& r) { r.turn(3.14159 / -2); });
