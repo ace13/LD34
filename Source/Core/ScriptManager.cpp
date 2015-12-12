@@ -444,6 +444,18 @@ void ScriptManager::unload(const std::string& name)
 	}
 
 	mScripts.erase(name);
+
+	mEngine->GarbageCollect(asGC_FULL_CYCLE, 2);
+}
+
+void ScriptManager::unloadAll()
+{
+	for (auto& script : mScripts)
+	{
+		unload(script.first);
+	}
+
+	mEngine->GarbageCollect(asGC_FULL_CYCLE, 5);
 }
 
 bool ScriptManager::hasLoaded(const std::string& name)

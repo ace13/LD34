@@ -14,10 +14,7 @@ void StateMachine::changeState(bool remove)
 	}
 
 	if (!toChangeTo)
-	{
 		toChangeTo = new T();
-		toChangeTo->mStateMachine = this;
-	}
 
 	changeState(toChangeTo, remove);
 }

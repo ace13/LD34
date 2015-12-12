@@ -22,9 +22,9 @@ public:
 
 	template<typename T>
 	void changeState(bool remove = false);
+	void changeState(IState* to, bool remove = false);
 
 private:
-	void changeState(IState* to, bool remove);
 	
 	Engine& mEngine;
 

@@ -65,23 +65,28 @@ void StateMachine::changeState(IState* to, bool remove)
 
 	if (mCurState)
 	{
-		mCurState->exit(*mLastSeenRT);
+		mCurState->exit(mLastSeenRT);
+
+		auto it2 = std::find_if(mOldStates.begin(), mOldStates.end(), [this](IState* st) {
+			return st == mCurState;
+		});
 
 		if (remove)
-			delete mCurState;
-		else
 		{
-			auto it2 = std::find_if(mOldStates.begin(), mOldStates.end(), [this](IState* st) {
-				return st == mCurState;
-			});
+			delete mCurState;
 
-			if (it2 == mOldStates.end())
-				mOldStates.push_front(mCurState);
+			if (it2 != mOldStates.end())
+				mOldStates.erase(it2);
 		}
+		else if (it2 == mOldStates.end())
+			mOldStates.push_front(mCurState);
 	}
 
 	if (mLastSeenRT && to)
-		to->enter(*mLastSeenRT);
+	{
+		to->mStateMachine = this;
+		to->enter(mLastSeenRT);
+	}
 	if (it == mOldStates.end())
 		mOldStates.push_back(to);
 

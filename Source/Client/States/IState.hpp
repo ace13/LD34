@@ -7,8 +7,8 @@ class IState
 public:
 	virtual ~IState() { }
 
-	virtual void enter(sf::RenderTarget&) { }
-	virtual void exit(sf::RenderTarget&) { }
+	virtual void enter(sf::RenderTarget*) { }
+	virtual void exit(sf::RenderTarget*) { }
 
 	virtual void event(const sf::Event&) = 0;
 	virtual void tick(const Timespan&) = 0;

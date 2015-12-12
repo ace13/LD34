@@ -1,6 +1,8 @@
 #include "IntroState.hpp"
 #include "MenuState.hpp"
 
+#include "../Menus/MainMenu.hpp"
+
 IntroState::IntroState() : 
 	mTime(0)
 {
@@ -24,7 +26,7 @@ void IntroState::update(const Timespan& dt)
 	mTime += dt;
 
 	if (mTime > std::chrono::seconds(15))
-		getStateMachine()->changeState<MenuState>(true);
+		getStateMachine()->changeState(new MenuState(new MainMenuPage()), true);
 }
 void IntroState::draw(sf::RenderTarget& rt)
 {

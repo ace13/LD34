@@ -5,6 +5,11 @@ SET(HEADERS
 	StateMachine.hpp
 	StateMachine.inl
 
+	Menus/MenuPage.hpp
+	Menus/InGameMenu.hpp
+	Menus/MainMenu.hpp
+	Menus/OptionMenu.hpp
+
 	States/IState.hpp
 	States/GameState.hpp
 	States/IntroState.hpp
@@ -15,6 +20,11 @@ SET(SOURCES
 	Application.cpp
 	ResourceManager.cpp
 	StateMachine.cpp
+
+	Menus/MenuPage.cpp
+	Menus/InGameMenu.cpp
+	Menus/MainMenu.cpp
+	Menus/OptionMenu.cpp
 	
 	States/GameState.cpp
 	States/IntroState.cpp
@@ -23,6 +33,8 @@ SET(SOURCES
 	main.cpp
 )
 
+SOURCE_GROUP("Header files\\Menus" REGULAR_EXPRESSION "Menus/[^./]+.(hpp|inl)")
+SOURCE_GROUP("Source files\\Menus" REGULAR_EXPRESSION "Menus/[^./]+.cpp")
 SOURCE_GROUP("Header files\\States" REGULAR_EXPRESSION "States/[^./]+.(hpp|inl)")
 SOURCE_GROUP("Source files\\States" REGULAR_EXPRESSION "States/[^./]+.cpp")
 

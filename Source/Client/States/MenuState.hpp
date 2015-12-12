@@ -2,11 +2,20 @@
 
 #include "IState.hpp"
 
+#include <vector>
+
+class MenuPage;
+
 class MenuState : public IState
 {
 public:
-	MenuState();
+	MenuState(MenuPage* startingPage);
 	~MenuState();
+
+	void pushPage(MenuPage* page);
+	void popPage();
+	MenuPage* peekPage();
+	const MenuPage* peekPage() const;
 
 	virtual void event(const sf::Event&);
 	virtual void tick(const Timespan&);
@@ -15,5 +24,5 @@ public:
 	virtual void drawUI(sf::RenderTarget&);
 
 private:
-
+	std::vector<MenuPage*> mPages;
 };
