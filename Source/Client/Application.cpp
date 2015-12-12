@@ -167,6 +167,8 @@ Application::Application() :
 	mEngine.add<FileWatcher>();
 	mEngine.add<ResourceManager>();
 	mEngine.add<sf::Font>();
+
+	mEngine.set<Application>(this);
 }
 
 Application::~Application()

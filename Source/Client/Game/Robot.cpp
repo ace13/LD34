@@ -1,10 +1,26 @@
 #include "Robot.hpp"
 #include "Program.hpp"
 
+#include "../ParticleManager.hpp"
+
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 
+namespace
+{
+	static const ParticleManager::Particle TRACK_PARTICLE{
+		std::chrono::seconds(2),
+		{ 8, 2 },
+		{ 64, 64, 64, 255 },
+		{ 64, 64, 64, 0 },
+		{ 0, 0 },
+		0, 0
+	};
+}
+
 Robot::Robot() : 
+	mTick(0),
+	mParticles(nullptr),
 	mCurProgram(nullptr),
 	mState { },
 	mTargetState { }
@@ -29,6 +45,17 @@ void Robot::tick(const Timespan& span)
 	mState.Speed += (mTargetState.Speed - mState.Speed) * dt * AccelerationSpeed;
 
 	mPosition += sf::Vector2f(cos(mState.Angle) * mState.Speed, sin(mState.Angle) * mState.Speed) * MoveSpeed * dt;
+
+	if (mParticles && (mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
+	{
+		sf::Vector2f tmp{
+			cos(mState.Angle + (3.14159f / 2)),
+			sin(mState.Angle + (3.14159f / 2))
+		};
+
+		mParticles->addParticle(TRACK_PARTICLE, mPosition + (tmp * 10.f), {}, mState.Angle);
+		mParticles->addParticle(TRACK_PARTICLE, mPosition - (tmp * 10.f), {}, mState.Angle);
+	}
 }
 
 void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -52,6 +79,11 @@ bool Robot::execute(const std::string& command)
 		return mCurProgram->execute(command, *this);
 
 	return false;
+}
+
+void Robot::passParticleManager(ParticleManager* pman)
+{
+	mParticles = pman;
 }
 
 const Program* Robot::getProgram() const

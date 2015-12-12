@@ -1,5 +1,6 @@
 #include "GameState.hpp"
 
+#include "../Application.hpp"
 #include "../Game/Program.hpp"
 
 #include <Core/Engine.hpp>
@@ -24,6 +25,8 @@ GameState::~GameState()
 
 void GameState::enter(sf::RenderTarget*)
 {
+	mRobot.passParticleManager(&mPreParticles);
+
 	mTickResource = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
 	mTick.setBuffer(*mTickResource);
 
@@ -89,6 +92,9 @@ void GameState::tick(const Timespan& dt)
 void GameState::update(const Timespan& dt)
 {
 	mDot += std::min(std::max(mDir * Time::Seconds(dt), -1.f), 1.f);
+
+	mPreParticles.update(dt);
+	mPostParticles.update(dt);
 }
 void GameState::draw(sf::RenderTarget& target)
 {
@@ -96,7 +102,11 @@ void GameState::draw(sf::RenderTarget& target)
 	view.zoom(0.5);
 	target.setView(view);
 
+	mPreParticles.draw(target);
+
 	target.draw(mRobot);
+
+	mPostParticles.draw(target);
 
 	target.setView(oldView);
 }

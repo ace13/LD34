@@ -1,5 +1,6 @@
 SET(HEADERS
 	Application.hpp
+	ParticleManager.hpp
 	ResourceManager.hpp
 	ResourceManager.inl
 	StateMachine.hpp
@@ -21,6 +22,7 @@ SET(HEADERS
 
 SET(SOURCES
 	Application.cpp
+	ParticleManager.cpp
 	ResourceManager.cpp
 	StateMachine.cpp
 

@@ -7,6 +7,7 @@
 
 #include <string>
 
+class ParticleManager;
 class Program;
 
 class Robot : public sf::Drawable
@@ -20,6 +21,8 @@ public:
 
 	bool execute(const std::string& command);
 	
+	void passParticleManager(ParticleManager*);
+
 	const Program* getProgram() const;
 	void setProgram(Program* prog);
 
@@ -33,6 +36,8 @@ private:
 		float Angle;
 	};
 
+	int mTick;
+	ParticleManager* mParticles;
 	State mState, mTargetState;
 	sf::Vector2f mPosition;
 

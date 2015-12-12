@@ -3,6 +3,7 @@
 #include "IState.hpp"
 #include "../Game/Robot.hpp"
 
+#include "../ParticleManager.hpp"
 #include "../ResourceManager.hpp"
 
 #include <SFML/Audio/Sound.hpp>
@@ -36,4 +37,7 @@ private:
 
 	Timestamp mNextExec;
 	Robot mRobot;
+
+	ParticleManager mPreParticles;
+	ParticleManager mPostParticles;
 };
