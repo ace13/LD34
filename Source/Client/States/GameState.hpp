@@ -3,6 +3,10 @@
 #include "IState.hpp"
 #include "../Game/Robot.hpp"
 
+#include "../ResourceManager.hpp"
+
+#include <SFML/Audio/Sound.hpp>
+
 #include <list>
 
 class GameState : public IState
@@ -23,6 +27,12 @@ public:
 private:
 	std::string mCurCommand;
 	std::list<std::string> mScripts;
+	std::list<std::string> mHistory;
+
+	float mDot, mDir;
+
+	sf::Sound mTick;
+	ResourceManager::Sound mTickResource;
 
 	Timestamp mNextExec;
 	Robot mRobot;

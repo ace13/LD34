@@ -66,6 +66,7 @@ void as::priv::RegColor(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectProperty("Color", "uint8 R", asOFFSET(sf::Color, r)));
 	AS_ASSERT(eng->RegisterObjectProperty("Color", "uint8 G", asOFFSET(sf::Color, g)));
 	AS_ASSERT(eng->RegisterObjectProperty("Color", "uint8 B", asOFFSET(sf::Color, b)));
+	AS_ASSERT(eng->RegisterObjectProperty("Color", "uint8 A", asOFFSET(sf::Color, a)));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opAssign(const Color&in)", asMETHODPR(sf::Color, operator=, (const sf::Color&), sf::Color&), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "bool opEquals(const Color&in) const", asFUNCTIONPR(sf::operator==, (const sf::Color&, const sf::Color&), bool), asCALL_CDECL_OBJFIRST));
