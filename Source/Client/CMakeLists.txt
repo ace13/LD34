@@ -11,6 +11,7 @@ SET(HEADERS
 	Game/Robot.hpp
 
 	Menus/MenuPage.hpp
+	Menus/InfoMenu.hpp
 	Menus/InGameMenu.hpp
 	Menus/MainMenu.hpp
 	Menus/OptionMenu.hpp
@@ -32,6 +33,7 @@ SET(SOURCES
 	Game/Robot.cpp
 
 	Menus/MenuPage.cpp
+	Menus/InfoMenu.cpp
 	Menus/InGameMenu.cpp
 	Menus/MainMenu.cpp
 	Menus/OptionMenu.cpp
