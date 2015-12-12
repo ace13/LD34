@@ -1,6 +1,7 @@
 #include "Application.hpp"
 #include "ResourceManager.hpp"
 
+#include "States/GameState.hpp"
 #include "States/IntroState.hpp"
 
 #include <Core/Time.hpp>
@@ -37,6 +38,7 @@ namespace
 				val->m_children[i]->Restore(arr->At(i), arr->GetElementTypeId());
 		}
 	};
+
 	/*
 	struct CGridType : public CUserType
 	{
@@ -182,6 +184,7 @@ void Application::init()
 	});
 	man.addExtension("Math", RegisterScriptMath);
 	man.addExtension("String", RegisterStdString);
+	man.registerSerializedType<std::string>("string");
 	man.addExtension("String Utils", RegisterStdStringUtils);
 	man.addExtension("Printing", [](asIScriptEngine* eng) {
 		AS_ASSERT(eng->RegisterGlobalFunction("void print(int)", asFUNCTION(print<int>), asCALL_CDECL));
@@ -207,17 +210,12 @@ void Application::init()
 	man.registerHook("Draw",   "void f(sf::Renderer@)");
 	man.registerHook("DrawUI", "void f(sf::Renderer@)");
 
-	// Load scripts;
-	std::list<std::string> files;
-	FileWatcher::recurseDirectory(".", files, "*.as");
-
-	for (auto& entry : files)
-	{
-		if (entry.substr(entry.length() - 3) != ".as")
-			continue;
-
-		man.loadFromFile(entry);
-	}
+	man.registerHook("Keyboard.Key", "void f(sf::Keyboard::Key,bool)");
+	man.registerHook("Joystick.Button", "void f(uint,uint,bool)");
+	man.registerHook("Joystick.Moved", "void f(uint,sf::Joystick::Axis,float)");
+	man.registerHook("Mouse.Button", "void f(const sf::Vec2&in,sf::Mouse::Button,bool)");
+	man.registerHook("Mouse.Moved", "void f(const sf::Vec2&in)");
+	man.registerHook("Text.Entered", "void f(uint)");
 
 	auto& watch = mEngine.get<FileWatcher>();
 
@@ -237,7 +235,7 @@ void Application::run()
 	auto& watch = mEngine.get<FileWatcher>();
 	auto& man = mEngine.get<ScriptManager>();
 
-	mState.changeState<IntroState>();
+	mState.changeState<GameState>();
 
 	window.create({ 800, 600 }, "Ludum Dare #34");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
@@ -266,9 +264,8 @@ void Application::run()
 		if (watch.pollChange(modified))
 		{
 			std::cout << modified << " was modified!" << std::endl;
-			if (modified.substr(modified.length() - 3) == ".as")
+			if (man.hasLoaded(modified))
 			{
-				auto& man = mEngine.get<ScriptManager>();
 				man.loadFromFile(modified);
 			}
 		}
@@ -323,6 +320,10 @@ void Application::run()
 				{
 					sf::Vector2f pos(sf::Mouse::getPosition(window));
 					man.runHook<const sf::Vector2f&>("Mouse.Moved", pos);
+				}
+				else if (ev.type == sf::Event::TextEntered)
+				{
+					man.runHook<uint32_t>("Text.Entered", ev.text.unicode);
 				}
 			}
 		}

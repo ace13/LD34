@@ -5,8 +5,10 @@
 #include <angelscript.h>
 
 #include <algorithm>
+#include <iterator>
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <sstream>
 
 #ifndef NDEBUG
@@ -234,10 +236,12 @@ bool ScriptManager::loadFromFile(const std::string& file, ScriptType type)
 }
 bool ScriptManager::loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type)
 {
-	bool reload = mScripts.count(name) > 0;
+	std::string lower;
+	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
+	bool reload = mScripts.count(lower) > 0;
 
 	std::list<std::pair<asIScriptObject*, bool>> toPersist;
-	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
+	asIScriptModule* module = mEngine->GetModule(lower.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
 	if (reload && module)
@@ -271,7 +275,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		mBuilder.StartNewModule(mEngine, scratchName);
 
-		mBuilder.AddSectionFromMemory(name.c_str(), (const char*)data, len);
+		mBuilder.AddSectionFromMemory(lower.c_str(), (const char*)data, len);
 
 		int r = mBuilder.BuildModule();
 		if (r < 0)
@@ -304,7 +308,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	if (module)
 		module->Discard();
 
-	module = mEngine->GetModule(name.c_str(), asGM_ALWAYS_CREATE);
+	module = mEngine->GetModule(lower.c_str(), asGM_ALWAYS_CREATE);
 	int r = module->LoadByteCode(&bcode);
 	if (r < 0)
 	{
@@ -320,8 +324,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	}
 
 
-	if (mScripts.count(name) == 0)
-		mScripts[name].Name = name;
+	if (mScripts.count(lower) == 0)
+		mScripts[lower].Name = name;
 
 	auto* fun = module->GetFunctionByName("OnLoad");
 	if (reload)
@@ -460,7 +464,10 @@ void ScriptManager::unloadAll()
 
 bool ScriptManager::hasLoaded(const std::string& name)
 {
-	return mScripts.count(name) > 0;
+	std::string lower;
+	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
+
+	return mScripts.count(lower) > 0;
 }
 
 void ScriptManager::registerHook(const std::string& name, const std::string& decl)

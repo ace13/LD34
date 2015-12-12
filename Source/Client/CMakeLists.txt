@@ -5,6 +5,9 @@ SET(HEADERS
 	StateMachine.hpp
 	StateMachine.inl
 
+	Game/Program.hpp
+	Game/Robot.hpp
+
 	Menus/MenuPage.hpp
 	Menus/InGameMenu.hpp
 	Menus/MainMenu.hpp
@@ -21,6 +24,9 @@ SET(SOURCES
 	ResourceManager.cpp
 	StateMachine.cpp
 
+	Game/Program.cpp
+	Game/Robot.cpp
+
 	Menus/MenuPage.cpp
 	Menus/InGameMenu.cpp
 	Menus/MainMenu.cpp
@@ -33,6 +39,8 @@ SET(SOURCES
 	main.cpp
 )
 
+SOURCE_GROUP("Header files\\Game" REGULAR_EXPRESSION "Game/[^./]+.(hpp|inl)")
+SOURCE_GROUP("Source files\\Game" REGULAR_EXPRESSION "Game/[^./]+.cpp")
 SOURCE_GROUP("Header files\\Menus" REGULAR_EXPRESSION "Menus/[^./]+.(hpp|inl)")
 SOURCE_GROUP("Source files\\Menus" REGULAR_EXPRESSION "Menus/[^./]+.cpp")
 SOURCE_GROUP("Header files\\States" REGULAR_EXPRESSION "States/[^./]+.(hpp|inl)")

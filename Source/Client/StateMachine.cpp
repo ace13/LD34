@@ -82,11 +82,12 @@ void StateMachine::changeState(IState* to, bool remove)
 			mOldStates.push_front(mCurState);
 	}
 
-	if (mLastSeenRT && to)
+	if (to)
 	{
 		to->mStateMachine = this;
 		to->enter(mLastSeenRT);
 	}
+
 	if (it == mOldStates.end())
 		mOldStates.push_back(to);
 
