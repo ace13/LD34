@@ -5,7 +5,7 @@
 #include <typeinfo>
 
 StateMachine::StateMachine(Engine& eng) :
-	mEngine(eng), mCurState(nullptr)
+	mEngine(eng), mCurState(nullptr), mLastSeenRT(nullptr)
 {
 
 }
@@ -56,27 +56,34 @@ void StateMachine::drawUI(sf::RenderTarget& target)
 
 void StateMachine::changeState(IState* to, bool remove)
 {
+	if (mCurState == to)
+		return;
+
 	auto it = std::find_if(mOldStates.begin(), mOldStates.end(), [&to](IState* st) {
 		return st == to;
 	});
 
-	if (mCurState && remove)
+	if (mCurState)
 	{
 		mCurState->exit(*mLastSeenRT);
-		delete mCurState;
-	}
-	else if (mCurState)
-	{
-		it = std::find_if(mOldStates.begin(), mOldStates.end(), [this](IState* st) {
-			return st == mCurState;
-		});
 
-		if (it == mOldStates.end())
-			mOldStates.push_front(mCurState);
+		if (remove)
+			delete mCurState;
+		else
+		{
+			auto it2 = std::find_if(mOldStates.begin(), mOldStates.end(), [this](IState* st) {
+				return st == mCurState;
+			});
+
+			if (it2 == mOldStates.end())
+				mOldStates.push_front(mCurState);
+		}
 	}
 
-	if (it == mOldStates.end() && mLastSeenRT && to)
+	if (mLastSeenRT && to)
 		to->enter(*mLastSeenRT);
+	if (it == mOldStates.end())
+		mOldStates.push_back(to);
 
 	mCurState = to;
 }

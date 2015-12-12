@@ -2,11 +2,11 @@
 
 #include "IState.hpp"
 
-class IntroState : public IState
+class MenuState : public IState
 {
 public:
-	IntroState();
-	~IntroState();
+	MenuState();
+	~MenuState();
 
 	virtual void event(const sf::Event&);
 	virtual void tick(const Timespan&);
@@ -15,5 +15,5 @@ public:
 	virtual void drawUI(sf::RenderTarget&);
 
 private:
-	Timespan mTime;
+
 };

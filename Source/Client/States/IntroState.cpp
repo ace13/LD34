@@ -1,11 +1,14 @@
 #include "IntroState.hpp"
+#include "MenuState.hpp"
 
-IntroState::IntroState()
+IntroState::IntroState() : 
+	mTime(0)
 {
 
 }
 IntroState::~IntroState()
 {
+
 }
 
 void IntroState::event(const sf::Event&)
@@ -16,14 +19,18 @@ void IntroState::tick(const Timespan&)
 {
 
 }
-void IntroState::update(const Timespan&)
+void IntroState::update(const Timespan& dt)
 {
+	mTime += dt;
 
+	if (mTime > std::chrono::seconds(15))
+		getStateMachine()->changeState<MenuState>(true);
 }
-void IntroState::draw(sf::RenderTarget&)
+void IntroState::draw(sf::RenderTarget& rt)
 {
+	
 }
-void IntroState::drawUI(sf::RenderTarget&)
+void IntroState::drawUI(sf::RenderTarget& rt)
 {
 
 }

@@ -1,6 +1,8 @@
 #include "Application.hpp"
 #include "ResourceManager.hpp"
 
+#include "States/IntroState.hpp"
+
 #include <Core/Time.hpp>
 #include <Core/FileWatcher.hpp>
 
@@ -234,6 +236,8 @@ void Application::run()
 	auto& window = mEngine.get<sf::RenderWindow>();
 	auto& watch = mEngine.get<FileWatcher>();
 	auto& man = mEngine.get<ScriptManager>();
+
+	mState.changeState<IntroState>();
 
 	window.create({ 800, 600 }, "AngelscriptMP Client");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });

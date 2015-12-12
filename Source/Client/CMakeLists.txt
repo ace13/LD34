@@ -7,6 +7,7 @@ SET(HEADERS
 
 	States/IState.hpp
 	States/IntroState.hpp
+	States/MenuState.hpp
 )
 
 SET(SOURCES
@@ -15,6 +16,7 @@ SET(SOURCES
 	StateMachine.cpp
 	
 	States/IntroState.cpp
+	States/MenuState.cpp
 
 	main.cpp
 )
