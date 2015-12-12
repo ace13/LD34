@@ -1,7 +1,9 @@
 #include "GameState.hpp"
 
 #include "../Application.hpp"
+#include "../Game/Entity.hpp"
 #include "../Game/Program.hpp"
+
 
 #include <Core/Engine.hpp>
 #include <Core/FileWatcher.hpp>
@@ -36,6 +38,7 @@ void GameState::enter(sf::RenderTarget* rt)
 
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
+	sman.setPreLoadCallback(Entity::preLoadInject);
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
@@ -46,6 +49,7 @@ void GameState::enter(sf::RenderTarget* rt)
 void GameState::exit(sf::RenderTarget*)
 {
 	auto& sman = getEngine().get<ScriptManager>();
+	sman.clearPreLoadCallback();
 	
 	for (auto& script : mScripts)
 		sman.unload(script);
@@ -126,8 +130,8 @@ void GameState::drawUI(sf::RenderTarget& target)
 	sf::CircleShape dot(10);
 
 	dot.setPosition(target.getView().getSize().x - 25 - mDot * 100 * mDir - mOff, 5);
-	float scale = std::abs(0.5 - mDot);
-	dot.scale((1 - scale) / 2, 0.5 + scale);
+	float scale = std::abs(0.5f - mDot);
+	dot.scale((1 - scale) / 2, 0.5f + scale);
 
 	target.draw(dot);
 

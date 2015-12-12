@@ -1,6 +1,8 @@
 #include "Application.hpp"
 #include "ResourceManager.hpp"
 
+#include "Game/Entity.hpp"
+
 #include "States/GameState.hpp"
 #include "States/IntroState.hpp"
 
@@ -208,6 +210,7 @@ void Application::init()
 	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
 	mEngine.get<ResourceManager>().registerScript(man);
+	Entity::registerType(man);
 
 	man.init();
 

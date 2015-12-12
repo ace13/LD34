@@ -309,6 +309,20 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		module->Discard();
 
 	module = mEngine->GetModule(lower.c_str(), asGM_ALWAYS_CREATE);
+
+	if (mPreLoadCallback && !mPreLoadCallback(module))
+	{
+		for (auto& it : toPersist)
+		{
+			it.first->Release();
+			mPersistant.push_back(it.first);
+		}
+
+		module->Discard();
+
+		return false;
+	}
+
 	int r = module->LoadByteCode(&bcode);
 	if (r < 0)
 	{
@@ -323,6 +337,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		return false;
 	}
 
+	module->BindAllImportedFunctions();
 
 	if (mScripts.count(lower) == 0)
 		mScripts[lower].Name = name;
@@ -399,6 +414,15 @@ bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& str
 	stream.read(&data[0], len);
 
 	return loadFromMemory(name, &data[0], len, type);
+}
+
+void ScriptManager::clearPreLoadCallback()
+{
+	mPreLoadCallback = ScriptPreLoadCallbackFun();
+}
+void ScriptManager::setPreLoadCallback(const ScriptPreLoadCallbackFun& func)
+{
+	mPreLoadCallback = func;
 }
 
 void ScriptManager::unload(const std::string& name)

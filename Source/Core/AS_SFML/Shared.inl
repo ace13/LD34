@@ -31,7 +31,13 @@ namespace
 template<typename T>
 void draw(sf::RenderTarget& target, const T& toDraw)
 {
-	target.draw(toDraw);
+	auto* ctx = asGetActiveContext();
+	sf::RenderStates* states = (sf::RenderStates*)ctx->GetUserData(0x5747);
+
+	if (states)
+		target.draw(toDraw, *states);
+	else
+		target.draw(toDraw);
 }
 
 template<typename T>

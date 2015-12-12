@@ -54,6 +54,7 @@ public:
 	};
 
 	typedef std::function<void(asIScriptEngine*)> ScriptExtensionFun;
+	typedef std::function<bool(asIScriptModule*)> ScriptPreLoadCallbackFun;
 
 	void addExtension(const std::string& name, const ScriptExtensionFun& function);
 	template<typename T>
@@ -63,6 +64,9 @@ public:
 	bool loadFromFile(const std::string& file, ScriptType type = Type_Text);
 	bool loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type = Type_Text);
 	bool loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type = Type_Text);
+
+	void clearPreLoadCallback();
+	void setPreLoadCallback(const ScriptPreLoadCallbackFun& func);
 
 	void unloadAll();
 	void unload(const std::string& name);
@@ -105,6 +109,7 @@ private:
 	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;
 	std::unordered_map<std::string, std::string> mRegisteredHooks;
 	std::unordered_map<std::string, std::list<ScriptHook>> mScriptHooks;
+	ScriptPreLoadCallbackFun mPreLoadCallback;
 	asIScriptEngine* mEngine;
 	CScriptBuilder mBuilder;
 };
