@@ -179,7 +179,8 @@ void Application::init()
 	mEngine.init();
 
 	auto& font = mEngine.get<sf::Font>();
-	font.loadFromFile("arial.ttf");
+	font.loadFromFile("FiraSans-Regular.otf");
+
 
 	auto& man = mEngine.get<ScriptManager>();
 

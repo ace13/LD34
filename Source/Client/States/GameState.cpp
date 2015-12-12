@@ -82,4 +82,6 @@ void GameState::drawUI(sf::RenderTarget& target)
 	commandString.setPosition(sf::Vector2f(target.getView().getSize().x, 0) - sf::Vector2f(bounds.width + 10, -bounds.height));
 
 	target.draw(commandString);
+
+
 }
