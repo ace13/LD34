@@ -397,6 +397,60 @@ bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& str
 	return loadFromMemory(name, &data[0], len, type);
 }
 
+void ScriptManager::unload(const std::string& name)
+{
+	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
+	if (!module)
+		return;
+
+	std::list<asIScriptObject*> released;
+
+	for (auto it = mPersistant.begin(); it != mPersistant.end();)
+	{
+		auto* obj = *it;
+
+		if (obj->GetObjectType()->GetModule() == module)
+		{
+			if (obj->Release() <= 0)
+				released.push_back(obj);
+
+			it = mPersistant.erase(it);
+		}
+		else
+			++it;
+	}
+
+	for (auto& hooks : mScriptHooks)
+	{
+		for (auto it = hooks.second.begin(); it != hooks.second.end();)
+		{
+			auto* obj = it->Object;
+
+			auto find = std::find(released.begin(), released.end(), obj);
+			if (find != released.end())
+			{
+				it = hooks.second.erase(it);
+			}
+			else if (obj->GetObjectType()->GetModule() == module)
+			{
+				if (obj->Release() <= 0)
+					released.push_back(obj);
+
+				it = hooks.second.erase(it);
+			}
+			else
+				++it;
+		}
+	}
+
+	mScripts.erase(name);
+}
+
+bool ScriptManager::hasLoaded(const std::string& name)
+{
+	return mScripts.count(name) > 0;
+}
+
 void ScriptManager::registerHook(const std::string& name, const std::string& decl)
 {
 	mRegisteredHooks.emplace(name, decl);

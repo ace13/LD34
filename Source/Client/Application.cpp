@@ -146,7 +146,8 @@ namespace
 	}
 }
 
-Application::Application()
+Application::Application() :
+	mState(mEngine)
 {
 	auto dur = Time::getClockPrecision();
 
@@ -286,6 +287,8 @@ void Application::run()
 			}
 			else
 			{
+				mState.event(ev);
+
 				if (ev.type == sf::Event::KeyPressed ||
 					ev.type == sf::Event::KeyReleased)
 				{
@@ -327,12 +330,14 @@ void Application::run()
 		while (tickTime >= tickLength)
 		{
 			// Run fixed updates
+			mState.tick(tickLength);
 			man.runHook<const Timespan&>("Tick", tickLength);
 
 			tickTime -= tickLength;
 		}
 
 		// Run per-frame updates
+		mState.update(dt);
 		man.runHook<const Timespan&>("Update", dt);
 
 
@@ -343,11 +348,13 @@ void Application::run()
 
 		// Draw things
 		window.setView(gameView);
+		mState.draw(window);
 		man.runHook<sf::RenderTarget*>("Draw", &window);
 		gameView = window.getView();
 
 		// Draw UI things
 		window.setView(uiView);
+		mState.drawUI(window);
 		man.runHook<sf::RenderTarget*>("DrawUI", &window);
 
 		window.display();

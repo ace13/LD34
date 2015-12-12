@@ -64,6 +64,9 @@ public:
 	bool loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type = Type_Text);
 	bool loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type = Type_Text);
 
+	void unload(const std::string& name);
+	bool hasLoaded(const std::string& name);
+
 	void addDefine(const std::string& define);
 
 	void init();
