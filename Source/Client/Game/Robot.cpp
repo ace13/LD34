@@ -86,6 +86,15 @@ void Robot::passParticleManager(ParticleManager* pman)
 	mParticles = pman;
 }
 
+const sf::Vector2f& Robot::getPosition() const
+{
+	return mPosition;
+}
+void Robot::setPosition(const sf::Vector2f& pos)
+{
+	mPosition = pos;
+}
+
 const Program* Robot::getProgram() const
 {
 	return mCurProgram;

@@ -23,6 +23,9 @@ public:
 	
 	void passParticleManager(ParticleManager*);
 
+	const sf::Vector2f& getPosition() const;
+	void setPosition(const sf::Vector2f& pos);
+
 	const Program* getProgram() const;
 	void setProgram(Program* prog);
 

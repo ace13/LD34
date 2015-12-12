@@ -24,6 +24,8 @@ public:
 	void changeState(bool remove = false);
 	void changeState(IState* to, bool remove = false);
 
+	void primeRT(sf::RenderTarget* rt);
+
 private:
 	
 	Engine& mEngine;

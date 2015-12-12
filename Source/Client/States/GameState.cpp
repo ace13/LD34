@@ -23,8 +23,12 @@ GameState::~GameState()
 
 }
 
-void GameState::enter(sf::RenderTarget*)
+void GameState::enter(sf::RenderTarget* rt)
 {
+	sf::View tmp = rt->getView();
+	tmp.zoom(0.5);
+	rt->setView(tmp);
+
 	mRobot.passParticleManager(&mPreParticles);
 
 	mTickResource = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
@@ -98,8 +102,9 @@ void GameState::update(const Timespan& dt)
 }
 void GameState::draw(sf::RenderTarget& target)
 {
-	auto view = target.getView(), oldView = view;
-	view.zoom(0.5);
+	auto view = target.getView();
+	view.move((mRobot.getPosition() - view.getCenter()) * 0.001f);
+
 	target.setView(view);
 
 	mPreParticles.draw(target);
@@ -108,7 +113,6 @@ void GameState::draw(sf::RenderTarget& target)
 
 	mPostParticles.draw(target);
 
-	target.setView(oldView);
 }
 void GameState::drawUI(sf::RenderTarget& target)
 {

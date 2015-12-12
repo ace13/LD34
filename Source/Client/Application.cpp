@@ -244,7 +244,7 @@ void Application::run()
 	auto& watch = mEngine.get<FileWatcher>();
 	auto& man = mEngine.get<ScriptManager>();
 
-	mState.changeState<GameState>();
+	mState.primeRT(&window);
 
 	window.create({ 800, 600 }, "Ludum Dare #34");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
@@ -255,6 +255,11 @@ void Application::run()
 
 		gameView.setSize(gameView.getSize().y * (size.x / size.y), gameView.getSize().y);
 	}
+	window.setView(gameView);
+
+	mState.changeState<GameState>();
+
+	gameView = window.getView();
 
 	const Timespan tickLength = std::chrono::milliseconds(15);
 	Timespan tickTime(0);

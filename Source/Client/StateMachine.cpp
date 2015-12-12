@@ -54,6 +54,11 @@ void StateMachine::drawUI(sf::RenderTarget& target)
 	mLastSeenRT = &target;
 }
 
+void StateMachine::primeRT(sf::RenderTarget* rt)
+{
+	mLastSeenRT = rt;
+}
+
 void StateMachine::changeState(IState* to, bool remove)
 {
 	if (mCurState == to)
