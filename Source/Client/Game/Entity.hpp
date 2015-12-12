@@ -11,6 +11,7 @@ class asIScriptModule;
 class asIScriptObject;
 class asIScriptFunction;
 class ScriptManager;
+class GameState;
 
 class Entity : public sf::Transformable, public sf::Drawable
 {
@@ -18,6 +19,7 @@ public:
 	Entity();
 	virtual ~Entity();
 
+	virtual void tick(const Timespan& dt);
 	virtual void update(const Timespan& dt);
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
@@ -27,6 +29,8 @@ public:
 	static void registerType(ScriptManager&);
 	static bool preLoadInject(asIScriptModule* mod);
 
+	static GameState* CurGameState;
+
 private:
 	static Entity* createFromScript();
 
@@ -34,7 +38,7 @@ private:
 
 	asILockableSharedBool* mScript;
 	asIScriptObject* mObject;
-	asIScriptFunction *mUpdate, *mDraw;
+	asIScriptFunction *mTick, *mUpdate, *mDraw;
 
 	int mRefCount;
 };

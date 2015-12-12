@@ -39,6 +39,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
 	sman.setPreLoadCallback(Entity::preLoadInject);
+	Entity::CurGameState = this;
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
@@ -102,6 +103,8 @@ void GameState::tick(const Timespan& dt)
 	}
 
 	mRobot.tick(dt);
+	for (auto& it : mEntities)
+		it->tick(dt);
 }
 void GameState::update(const Timespan& dt)
 {
@@ -109,6 +112,8 @@ void GameState::update(const Timespan& dt)
 
 	mPreParticles.update(dt);
 	mPostParticles.update(dt);
+	for (auto& it : mEntities)
+		it->update(dt);
 }
 void GameState::draw(sf::RenderTarget& target)
 {
@@ -119,6 +124,9 @@ void GameState::draw(sf::RenderTarget& target)
 	target.clear(sf::Color(0x4A, 0x70, 0x23));
 
 	mPreParticles.draw(target);
+
+	for (auto& it : mEntities)
+		it->draw(target, {});
 
 	target.draw(mRobot);
 
@@ -160,4 +168,11 @@ void GameState::drawUI(sf::RenderTarget& target)
 
 		commandString.move(0, rect.height + 5);
 	}
+}
+
+void GameState::injectEntity(Entity* ent)
+{
+	ent->addRef();
+
+	mEntities.push_back(ent);
 }

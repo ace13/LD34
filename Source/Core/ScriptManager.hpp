@@ -83,7 +83,7 @@ public:
 	bool addHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
 	bool removeHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
 
-	void addPersist(asIScriptObject* obj);
+	void addPersist(asIScriptObject* obj, const std::function<void(asIScriptObject*)>& callback = std::function<void(asIScriptObject*)>());
 	void removePersist(asIScriptObject* obj);
 
 	asIScriptEngine* getEngine();
@@ -94,6 +94,11 @@ private:
 		std::string Name;
 		bool DirectLoad;
 	};
+	struct Persist
+	{
+		asIScriptObject* Object;
+		std::function<void(asIScriptObject*)> Callback;
+	};
 	struct ScriptHook
 	{
 		asIScriptFunction* Function;
@@ -103,7 +108,7 @@ private:
 	void addHookFromScript(const std::string& hook, const std::string& func);
 	void removeHookFromScript(const std::string& hook, const std::string& func);
 	
-	std::list<asIScriptObject*> mPersistant;
+	std::list<Persist> mPersistant;
 	std::list<std::pair<std::string, ScriptExtensionFun>> mExtensions;
 	std::unordered_map<std::string, Script> mScripts;
 	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;

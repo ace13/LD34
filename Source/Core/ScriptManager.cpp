@@ -173,6 +173,7 @@ void ScriptManager::init()
 	});
 
 	asIScriptEngine* eng = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+	eng->SetUserData(this, 0x4547);
 	eng->SetMessageCallback(asFUNCTION(error), nullptr, asCALL_CDECL);
 
 #ifndef NDEBUG
@@ -240,7 +241,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
 	bool reload = mScripts.count(lower) > 0;
 
-	std::list<std::pair<asIScriptObject*, bool>> toPersist;
+	std::list<std::pair<Persist, bool>> toPersist;
 	asIScriptModule* module = mEngine->GetModule(lower.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
@@ -251,12 +252,13 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		for (auto it = mPersistant.begin(); it != mPersistant.end();)
 		{
-			auto* obj = *it;
+			auto* obj = it->Object;
 
 			if (obj->GetObjectType()->GetModule() == module)
 			{
 				serial.AddExtraObjectToStore(obj);
-				toPersist.push_back({ obj, false });
+
+				toPersist.push_back({ *it, false });
 				obj->AddRef();
 
 				it = mPersistant.erase(it);
@@ -275,6 +277,17 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		mBuilder.StartNewModule(mEngine, scratchName);
 
+		if (mPreLoadCallback && !mPreLoadCallback(mBuilder.GetModule()))
+		{
+			for (auto& it : toPersist)
+			{
+				it.first.Object->Release();
+				mPersistant.push_back(it.first);
+			}
+
+			return false;
+		}
+
 		mBuilder.AddSectionFromMemory(lower.c_str(), (const char*)data, len);
 
 		int r = mBuilder.BuildModule();
@@ -282,7 +295,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		{
 			for (auto& it : toPersist)
 			{
-				it.first->Release();
+				it.first.Object->Release();
 				mPersistant.push_back(it.first);
 			}
 
@@ -310,11 +323,11 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 	module = mEngine->GetModule(lower.c_str(), asGM_ALWAYS_CREATE);
 
-	if (mPreLoadCallback && !mPreLoadCallback(module))
+	if (type == Type_Bytecode && mPreLoadCallback && !mPreLoadCallback(module))
 	{
 		for (auto& it : toPersist)
 		{
-			it.first->Release();
+			it.first.Object->Release();
 			mPersistant.push_back(it.first);
 		}
 
@@ -328,7 +341,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	{
 		for (auto& it : toPersist)
 		{
-			it.first->Release();
+			it.first.Object->Release();
 			mPersistant.push_back(it.first);
 		}
 
@@ -349,29 +362,14 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		for (auto& it : toPersist)
 		{
-			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it.first);
-			mPersistant.push_back(newObj);
+			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it.first.Object);
 
-			for (auto& hooks : mScriptHooks)
-			{
-				for (auto& hook : hooks.second)
-				{
-					if (hook.Object == it.first)
-					{
-						auto oldFunc = hook.Function;
+			if (it.first.Callback)
+				it.first.Callback(newObj);
 
-						if (!it.second && hook.Object->Release() <= 0)
-							it.second = true;
+			mPersistant.push_back({ newObj, it.first.Callback });
 
-						hook.Object = newObj;
-						hook.Function = newObj->GetObjectType()->GetMethodByName(oldFunc->GetName());
-
-						hook.Object->AddRef();
-					}
-				}
-			}
-
-			if (!it.second && it.first->Release() <= 0)
+			if (!it.second && it.first.Object->Release() <= 0)
 				it.second = true;
 		}
 
@@ -435,7 +433,7 @@ void ScriptManager::unload(const std::string& name)
 
 	for (auto it = mPersistant.begin(); it != mPersistant.end();)
 	{
-		auto* obj = *it;
+		auto* obj = it->Object;
 
 		if (obj->GetObjectType()->GetModule() == module)
 		{
@@ -556,7 +554,14 @@ void ScriptManager::addHookFromScript(const std::string& hook, const std::string
 		return;
 	}
 
-	addPersist(obj);
+	addPersist(obj, [&](asIScriptObject* newObj) {
+		auto& hooks = mScriptHooks.at(hook);
+		auto it = std::find_if(hooks.begin(), hooks.end(), [obj, funcptr](const ScriptHook& h) {return h.Function == funcptr, h.Object == obj; });
+
+		it->Object->Release();
+		it->Object = newObj;
+		it->Object->AddRef();
+	});
 	obj->AddRef();
 }
 void ScriptManager::removeHookFromScript(const std::string& hook, const std::string& func)
@@ -602,15 +607,15 @@ void ScriptManager::removeHookFromScript(const std::string& hook, const std::str
 	}
 }
 
-void ScriptManager::addPersist(asIScriptObject* obj)
+void ScriptManager::addPersist(asIScriptObject* obj, const std::function<void(asIScriptObject*)>& callback)
 {
-	auto it = std::find(mPersistant.begin(), mPersistant.end(), obj);
+	auto it = std::find_if(mPersistant.begin(), mPersistant.end(), [obj](const Persist& p) { return p.Object == obj; });
 	if (it == mPersistant.end())
-		mPersistant.push_back(obj);
+		mPersistant.push_back({ obj, callback });
 }
 void ScriptManager::removePersist(asIScriptObject* obj)
 {
-	auto it = std::find(mPersistant.begin(), mPersistant.end(), obj);
+	auto it = std::find_if(mPersistant.begin(), mPersistant.end(), [obj](const Persist& p) { return p.Object == obj; });
 	if (it != mPersistant.end())
 		mPersistant.erase(it);
 }

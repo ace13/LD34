@@ -29,13 +29,18 @@ namespace
 }
 
 template<typename T>
-void draw(sf::RenderTarget& target, const T& toDraw)
+void draw(sf::RenderTarget& target, const T& toDraw, bool applyStates)
 {
-	auto* ctx = asGetActiveContext();
-	sf::RenderStates* states = (sf::RenderStates*)ctx->GetUserData(0x5747);
+	if (applyStates)
+	{
+		auto* ctx = asGetActiveContext();
+		sf::RenderStates* states = (sf::RenderStates*)ctx->GetUserData(0x5747);
 
-	if (states)
-		target.draw(toDraw, *states);
+		if (states)
+			target.draw(toDraw, *states);
+		else
+			target.draw(toDraw);
+	}
 	else
 		target.draw(toDraw);
 }
@@ -46,7 +51,7 @@ void RegisterDrawable(asIScriptEngine* eng, const char* name)
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_LocalBounds() const", asFUNCTION(getLocalBounds<T>), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_GlobalBounds() const", asFUNCTION(getGlobalBounds<T>), asCALL_GENERIC));
 
-	AS_ASSERT(eng->RegisterObjectMethod("Renderer", ("void Draw(const " + std::string(name) + "&in)").c_str(), asFUNCTIONPR(draw, (sf::RenderTarget&, const T&), void), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Renderer", ("void Draw(const " + std::string(name) + "&in,bool=true)").c_str(), asFUNCTIONPR(draw, (sf::RenderTarget&, const T&, bool), void), asCALL_CDECL_OBJFIRST));
 }
 template<typename T>
 void RegisterTransformable(asIScriptEngine* eng, const char* name)

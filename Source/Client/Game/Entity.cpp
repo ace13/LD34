@@ -1,6 +1,9 @@
 #include "Entity.hpp"
+#include "../States/GameState.hpp"
 
 #include <Core/ScriptManager.hpp>
+
+GameState* Entity::CurGameState = nullptr;
 
 Entity* Entity::createFromScript()
 {
@@ -14,6 +17,13 @@ Entity* Entity::createFromScript()
 
 	Entity* toRet = new	Entity();
 	toRet->setScriptObject((asIScriptObject*)ctx->GetThisPointer());
+
+	ScriptManager* man = (ScriptManager*)ctx->GetEngine()->GetUserData(0x4547);
+	man->addPersist((asIScriptObject*)ctx->GetThisPointer(), [toRet](asIScriptObject* newObj) {
+		toRet->setScriptObject(newObj);
+	});
+
+	CurGameState->injectEntity(toRet);
 
 	return toRet;
 }
@@ -42,10 +52,10 @@ void Entity::update(const Timespan& dt)
 		auto* eng = mObject->GetEngine();
 		
 		auto* ctx = eng->RequestContext();
+		ctx->Prepare(mUpdate);
+
 		ctx->SetObject(mObject);
 		ctx->SetArgObject(0, (Timespan*)&dt);
-
-		ctx->Prepare(mUpdate);
 
 		ctx->Execute();
 
@@ -53,6 +63,26 @@ void Entity::update(const Timespan& dt)
 		eng->ReturnContext(ctx);
 	}
 }
+
+void Entity::tick(const Timespan& dt)
+{
+	if (mScript && !mScript->Get())
+	{
+		auto* eng = mObject->GetEngine();
+
+		auto* ctx = eng->RequestContext();
+		ctx->Prepare(mTick);
+
+		ctx->SetObject(mObject);
+		ctx->SetArgObject(0, (Timespan*)&dt);
+
+		ctx->Execute();
+
+		ctx->Unprepare();
+		eng->ReturnContext(ctx);
+	}
+}
+
 
 void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
@@ -63,11 +93,11 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		states.transform *= getTransform();
 
 		auto* ctx = eng->RequestContext();
+		ctx->Prepare(mDraw);
+
 		ctx->SetObject(mObject);
 		ctx->SetArgObject(0, &target);
 		ctx->SetUserData(&states, 0x5747);
-
-		ctx->Prepare(mDraw);
 
 		ctx->Execute();
 
@@ -79,7 +109,20 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 void Entity::setScriptObject(asIScriptObject* obj)
 {
 	if (mScript)
-		return;
+	{
+		auto oldObjProp = mObject->GetAddressOfProperty(0);
+		auto newObjProp = obj->GetAddressOfProperty(0);
+
+		// Move the entity pointer over to the new object
+		*reinterpret_cast<Entity**>(newObjProp) = *reinterpret_cast<Entity**>(oldObjProp);
+		*reinterpret_cast<Entity**>(oldObjProp) = nullptr;
+
+		mObject->Release();
+		mObject = nullptr;
+
+		mScript->Release();
+		mScript = nullptr;
+	}
 
 	mScript = obj->GetWeakRefFlag();
 	mScript->AddRef();
@@ -88,6 +131,7 @@ void Entity::setScriptObject(asIScriptObject* obj)
 	mObject->AddRef();
 
 	mDraw = mObject->GetObjectType()->GetMethodByDecl("void Draw(sf::Renderer@)");
+	mTick = mObject->GetObjectType()->GetMethodByDecl("void Tick(const Timespan&in)");
 	mUpdate = mObject->GetObjectType()->GetMethodByDecl("void Update(const Timespan&in)");
 }
 
@@ -117,6 +161,45 @@ int Entity::release()
 	return refs;
 }
 
+namespace
+{
+	const std::string ScriptEntityCode(
+		"shared abstract class ScriptEntity {\n"
+		"	private EntityType_t @mObj;\n"
+		"	EntityType_t@ opImplCast() { return mObj; }\n"
+		"\n"
+		"	ScriptEntity() {\n"
+		"		@mObj = EntityType_t();\n"
+		"	}\n"
+		"\n"
+		"	void Tick(const Timespan&in) { print(\"I am base\\n\"); }\n"
+		"	void Update(const Timespan&in) { }\n"
+		"	void Draw(sf::Renderer@) { } \n"
+		"\n"
+		"	sf::Vec2 Origin {\n"
+		"		get const { return mObj.Origin; }\n"
+		"		set { mObj.Origin = value; }\n"
+		"	}\n"
+		"	sf::Vec2 Position {\n"
+		"		get const { return mObj.Position; }\n"
+		"		set { mObj.Position = value; }\n"
+		"	}\n"
+		"	sf::Vec2 Scale {\n"
+		"		get const { return mObj.Scale; }\n"
+		"		set { mObj.Scale = value; }\n"
+		"	}\n"
+		"	float Rotation {\n"
+		"		get const { return mObj.Rotation; }\n"
+		"		set { mObj.Rotation = value; }\n"
+		"	}\n"
+		"\n"
+		"	void Move(const sf::Vec2&in v) { mObj.Move(v); }\n"
+		"	void Scale(const sf::Vec2&in v) { mObj.Scale(v); }\n"
+		"	void Rotate(float r) { mObj.Rotate(r); }\n"
+		"}\n"
+		);
+}
+
 void Entity::registerType(ScriptManager& man)
 {
 	man.addExtension("Entity", [](asIScriptEngine* eng) {
@@ -141,74 +224,12 @@ void Entity::registerType(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Scale(const sf::Vec2&in)", asMETHODPR(Entity, scale, (const sf::Vector2f&), void), asCALL_THISCALL));
 
 		auto* mod = eng->GetModule("ScriptEntity", asGM_ALWAYS_CREATE);
-
-		const std::string code(
-			"shared abstract class ScriptEntity {\n"
-			"	private EntityType_t @mObj;\n"
-			"	EntityType_t@ opImplCast() { return mObj; }\n"
-			"\n"
-			"	ScriptEntity() {\n"
-			"		@mObj = EntityType_t();\n"
-			"	}\n"
-			"\n"
-			"	void Update(const Timespan&in) { }\n"
-			"	void Draw(sf::Renderer@) { } \n"
-			"\n"
-			"	sf::Vec2 Origin {\n"
-			"		get const { return mObj.Origin; }\n"
-			"		set { mObj.Origin = value; }\n"
-			"	}\n"
-			"	sf::Vec2 Position {\n"
-			"		get const { return mObj.Position; }\n"
-			"		set { mObj.Position = value; }\n"
-			"	}\n"
-			"	sf::Vec2 Scale {\n"
-			"		get const { return mObj.Scale; }\n"
-			"		set { mObj.Scale = value; }\n"
-			"	}\n"
-			"	float Rotation {\n"
-			"		get const { return mObj.Rotation; }\n"
-			"		set { mObj.Rotation = value; }\n"
-			"	}\n"
-			"\n"
-			"	void Move(const sf::Vec2&in v) { mObj.Move(v); }\n"
-			"	void Scale(const sf::Vec2&in v) { mObj.Scale(v); }\n"
-			"	void Rotate(float r) { mObj.Rotate(r); }\n"
-			"}\n"
-			);
-
-		mod->AddScriptSection("ScriptEntity", code.c_str(), code.size());
+		mod->AddScriptSection("ScriptEntity", ScriptEntityCode.c_str(), ScriptEntityCode.size());
 		mod->Build();
 	});
 }
 
 bool Entity::preLoadInject(asIScriptModule* mod)
 {
-	static const std::string code(
-		"shared abstract class ScriptEntity {\n"
-		"	EntityType_t@ opImplCast();\n"
-		"	ScriptEntity();\n"
-		"	void Update(const Timespan&in);\n"
-		"	void Draw(sf::Renderer@);\n"
-		"\n"
-		"	sf::Vec2 Origin {\n"
-		"		get const; set;\n"
-		"	}\n"
-		"	sf::Vec2 Position {\n"
-		"		get const; set;\n"
-		"	}\n"
-		"	sf::Vec2 Scale {\n"
-		"		get const; set;\n"
-		"	}\n"
-		"	float Rotation {\n"
-		"		get const; set;\n"
-		"	}\n"
-		"\n"
-		"	void Move(const sf::Vec2&in v);\n"
-		"	void Scale(const sf::Vec2&in v);\n"
-		"	void Rotate(float r);\n"
-		"}\n"
-		);
-
-	return mod->AddScriptSection("ScriptEntity", code.c_str(), code.size()) >= 0;
+	return mod->AddScriptSection("ScriptEntity", ScriptEntityCode.c_str(), ScriptEntityCode.size()) >= 0;
 }
