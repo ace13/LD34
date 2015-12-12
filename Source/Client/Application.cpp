@@ -217,10 +217,10 @@ void Application::init()
 	man.registerHook("Draw",   "void f(sf::Renderer@)");
 	man.registerHook("DrawUI", "void f(sf::Renderer@)");
 
-	man.registerHook("Keyboard.Key", "void f(sf::Keyboard::Key,bool)");
-	man.registerHook("Joystick.Button", "void f(uint,uint,bool)");
-	man.registerHook("Joystick.Moved", "void f(uint,sf::Joystick::Axis,float)");
-	man.registerHook("Mouse.Button", "void f(const sf::Vec2&in,sf::Mouse::Button,bool)");
+	man.registerHook("Keyboard.Key", "void f(sf::Keyboard::Key, bool)");
+	man.registerHook("Joystick.Button", "void f(uint, uint, bool)");
+	man.registerHook("Joystick.Moved", "void f(uint, sf::Joystick::Axis, float)");
+	man.registerHook("Mouse.Button", "void f(const sf::Vec2&in, sf::Mouse::Button,bool)");
 	man.registerHook("Mouse.Moved", "void f(const sf::Vec2&in)");
 	man.registerHook("Text.Entered", "void f(uint)");
 

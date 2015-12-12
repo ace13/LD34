@@ -59,6 +59,13 @@ namespace
 	template<typename T, typename... Args>
 	inline void setCTXArg(asIScriptContext* ctx, uint32_t id, T* arg, Args... args)
 	{
+		ctx->SetArgObject(id, arg);
+		setCTXArg(ctx, id + 1, args...);
+	}
+
+	template<typename T, typename... Args>
+	inline void setCTXArg(asIScriptContext* ctx, uint32_t id, const T* arg, Args... args)
+	{
 		ctx->SetArgObject(id, const_cast<T*>(arg));
 		setCTXArg(ctx, id + 1, args...);
 	}
@@ -89,7 +96,7 @@ void ScriptManager::runHook(const std::string& name, Args... args)
 		if (r < 0)
 			continue;
 
-		setCTXArg(ctx, 0, std::forward<Args>(args)...);
+		setCTXArg(ctx, 0, args...);
 
 		ctx->Execute();
 

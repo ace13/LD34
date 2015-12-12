@@ -23,11 +23,13 @@ GameState::~GameState()
 void GameState::enter(sf::RenderTarget*)
 {
 	auto& sman = getEngine().get<ScriptManager>();
+	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
 	for (auto& script : mScripts)
 		sman.loadFromFile(script);
+
 }
 void GameState::exit(sf::RenderTarget*)
 {
@@ -51,7 +53,12 @@ void GameState::tick(const Timespan& dt)
 {
 	if (Clock::now() > mNextExec)
 	{
-		mRobot.execute(mCurCommand);
+		if (mRobot.execute(mCurCommand))
+		{
+			std::string name = mRobot.getProgram()->getName(mCurCommand);
+			getEngine().get<ScriptManager>().runHook<const std::string*, const std::string*>("OnCommand", &mCurCommand, &name);
+		}
+
 		mCurCommand.clear();
 
 		mNextExec = Clock::now() + std::chrono::seconds(1);

@@ -11,8 +11,8 @@ class Program
 public:
 	virtual ~Program() { }
 
-	virtual void execute(const std::string& command, Robot& actor);
-	virtual std::string getName(const std::string& opcode);
+	virtual bool execute(const std::string& command, Robot& actor);
+	virtual const std::string& getName(const std::string& opcode) const;
 
 protected:
 	void addOpcode(const std::string& opcode, const std::string& name, const std::function<void(Robot&)>& func);

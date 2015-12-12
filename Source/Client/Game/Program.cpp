@@ -1,17 +1,23 @@
 #include "Program.hpp"
 #include "Robot.hpp"
 
-void Program::execute(const std::string& command, Robot& actor)
+bool Program::execute(const std::string& command, Robot& actor)
 {
 	if (mOpcodes.count(command))
+	{
 		mOpcodes.at(command).Callback(actor);
+		return true;
+	}
+
+	return false;
 }
 
-std::string Program::getName(const std::string& opcode)
+const std::string& Program::getName(const std::string& opcode) const
 {
+	static const std::string Invalid = "";
 	if (mOpcodes.count(opcode))
 		return mOpcodes.at(opcode).Name;
-	return "";
+	return Invalid;
 }
 
 void Program::addOpcode(const std::string& op, const std::string& name, const std::function<void(Robot&)>& func)

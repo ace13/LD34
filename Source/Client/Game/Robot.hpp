@@ -18,8 +18,9 @@ public:
 	void tick(const Timespan& dt);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-	void execute(const std::string& command);
+	bool execute(const std::string& command);
 	
+	const Program* getProgram() const;
 	void setProgram(Program* prog);
 
 	void setSpeed(float speed);

@@ -46,10 +46,17 @@ void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-void Robot::execute(const std::string& command)
+bool Robot::execute(const std::string& command)
 {
 	if (mCurProgram)
-		mCurProgram->execute(command, *this);
+		return mCurProgram->execute(command, *this);
+
+	return false;
+}
+
+const Program* Robot::getProgram() const
+{
+	return mCurProgram;
 }
 
 void Robot::setProgram(Program* prog)
