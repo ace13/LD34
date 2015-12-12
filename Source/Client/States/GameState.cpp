@@ -7,6 +7,7 @@
 #include <Core/ScriptManager.hpp>
 
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Window/Event.hpp>
 
 GameState::GameState() :
@@ -72,7 +73,13 @@ void GameState::draw(sf::RenderTarget& target)
 
 	target.setView(oldView);
 }
-void GameState::drawUI(sf::RenderTarget&)
+void GameState::drawUI(sf::RenderTarget& target)
 {
+	sf::Text commandString(mCurCommand, getEngine().get<sf::Font>());
 
+	auto bounds = commandString.getLocalBounds();
+	commandString.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+	commandString.setPosition(sf::Vector2f(target.getView().getSize().x, 0) - sf::Vector2f(bounds.width + 10, -bounds.height));
+
+	target.draw(commandString);
 }

@@ -7,6 +7,7 @@
 #include <Core/Time.hpp>
 #include <Core/FileWatcher.hpp>
 
+#include <SFML/Graphics/Font.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Thread.hpp>
 #include <SFML/System/Sleep.hpp>
@@ -165,6 +166,7 @@ Application::Application() :
 	mEngine.add<sf::RenderWindow>();
 	mEngine.add<FileWatcher>();
 	mEngine.add<ResourceManager>();
+	mEngine.add<sf::Font>();
 }
 
 Application::~Application()
@@ -175,6 +177,9 @@ void Application::init()
 {
 	auto beg = Clock::now();
 	mEngine.init();
+
+	auto& font = mEngine.get<sf::Font>();
+	font.loadFromFile("arial.ttf");
 
 	auto& man = mEngine.get<ScriptManager>();
 
@@ -204,6 +209,7 @@ void Application::init()
 	man.init();
 
 	man.getEngine()->SetUserData(&mEngine.get<sf::RenderWindow>(), 0x6AE1);
+	man.getEngine()->SetUserData(&font, 0xF077);
 
 	man.registerHook("Tick",   "void f(const Timespan&in)");
 	man.registerHook("Update", "void f(const Timespan&in)");
