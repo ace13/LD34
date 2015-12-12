@@ -239,7 +239,7 @@ void Application::run()
 
 	mState.changeState<IntroState>();
 
-	window.create({ 800, 600 }, "AngelscriptMP Client");
+	window.create({ 800, 600 }, "Ludum Dare #34");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
 	{
 		sf::Vector2f size = (sf::Vector2f)window.getSize();
