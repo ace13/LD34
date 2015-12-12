@@ -6,6 +6,8 @@ SET(HEADERS
 	StateMachine.hpp
 	StateMachine.inl
 
+	Game/Entity.hpp
+	Game/Goal.hpp
 	Game/Level.hpp
 	Game/Program.hpp
 	Game/Robot.hpp
@@ -28,6 +30,8 @@ SET(SOURCES
 	ResourceManager.cpp
 	StateMachine.cpp
 
+	Game/Entity.cpp
+	Game/Goal.cpp
 	Game/Level.cpp
 	Game/Program.cpp
 	Game/Robot.cpp

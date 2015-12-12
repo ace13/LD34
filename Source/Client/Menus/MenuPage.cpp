@@ -80,3 +80,8 @@ void MenuPage::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		text.move(0, text.getLocalBounds().height + 5);
 	}
 }
+
+void MenuPage::addEntry(const std::string& name, const std::function<void()>& callback)
+{
+
+}

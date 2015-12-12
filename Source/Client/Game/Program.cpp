@@ -32,7 +32,6 @@ void Program::addOpcode(const std::string& op, const std::string& name, const st
 
 BaseProgram::BaseProgram()
 {
-	auto nop = [](Robot&r) {};
 	addOpcode("0", "STOP", [](Robot& r) { r.setSpeed(0); });
 	addOpcode("1", "MOVE", [](Robot& r) { r.setSpeed(1); });
 	addOpcode("01", "TURN_LEFT",  [](Robot& r) { r.turn(3.14159 / -2); });

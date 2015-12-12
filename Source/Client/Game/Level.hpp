@@ -1,12 +1,35 @@
 #pragma once
 
-#include <string>
+#include <SFML/System/InputStream.hpp>
 
-namespace sf { class InputStream; }
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class Level
 {
 public:
+	class File : public sf::InputStream
+	{
+	public:
+		~File();
+
+		operator bool() const;
+
+		int64_t read(void* data, int64_t size);
+		int64_t seek(int64_t position);
+		int64_t tell();
+		int64_t getSize();
+
+	private:
+		File(const char* data, size_t size);
+
+		const char* mData;
+		size_t mGetP, mSize;
+
+		friend class Level;
+	};
+
 	Level();
 	~Level();
 
@@ -16,28 +39,56 @@ public:
 
 	bool saveToFile(const std::string& file);
 
+	File&& getContained(const std::string& name) const;
+
 private:
 #pragma pack(push, 1)
-	struct Header
+	struct OnDisk
 	{
-		uint32_t Rows : 8;
-		uint32_t ObjCount : 16;
-	};
+		struct Header
+		{
+			uint64_t Rows : 8;
+			uint64_t ObjCount : 10;
+			uint64_t ContainedFiles : 6;
 
-	struct PlayerData
-	{
-		uint64_t PosX : 8;
-		uint64_t PosY : 8;
-		uint64_t Dir : 2;
+			uint64_t BackgroundColor : 24;
 
-		// MORE DATA IS NEEDED
-	};
+			char ScriptFile[24];
+			char ScriptObject[12];
+		};
 
-	struct ObjDef
-	{
-		// The market for data has crashed 
+		struct PlayerData
+		{
+			uint64_t PosX : 8;
+			uint64_t PosY : 8;
+			uint64_t Dir : 2;
+
+			// MORE DATA IS NEEDED
+		};
+
+		struct ObjDef
+		{
+			uint64_t PosX : 8;
+			uint64_t Posy : 8;
+
+			char ScriptFile[24];
+			char ScriptObject[16];
+
+			// The market for data has crashed 
+		};
+
+		struct ContainedFile
+		{
+			char FileName[12];
+			uint16_t FileSize;
+			uint16_t FileOffset;
+		};
 	};
 #pragma pack(pop)
 
+	//Header mHeader;
+	//PlayerData mPlayerData;
+	//std::vector<ObjDef> mObjects;
+	std::unordered_map<std::string, std::vector<char>> mFiles;
 
 };
