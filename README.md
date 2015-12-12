@@ -1,7 +1,9 @@
 LD34
 =====
 
-My Ludum Dare 34 entry
+My Ludum Dare 34 entry.
+
+The themes are *Two Button Controls* and *Growing*
 
 
 Dependencies
