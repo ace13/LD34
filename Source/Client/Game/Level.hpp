@@ -39,6 +39,7 @@ public:
 
 	bool saveToFile(const std::string& file);
 
+	bool bakeFile(const std::string& file);
 	File&& getContained(const std::string& name) const;
 
 private:
@@ -61,6 +62,8 @@ private:
 			uint64_t PosX : 8;
 			uint64_t PosY : 8;
 			uint64_t Dir : 2;
+
+			char Programming[72];
 		};
 
 		struct ObjDef

@@ -1,5 +1,6 @@
 #include "ParticleManager.hpp"
 
+#include <Core/Math.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 
 ParticleManager::ParticleManager()
@@ -64,7 +65,7 @@ void ParticleManager::draw(sf::RenderTarget& target)
 		auto col = lerpColor(it.Definition->StartColor, it.Definition->EndColor, life);
 
 		const sf::Vector2f Left{ cos(it.Angle), sin(it.Angle) };
-		const sf::Vector2f Top{ cos(it.Angle - (3.14159f/2)), sin(it.Angle - (3.14159f / 2)) };
+		const sf::Vector2f Top{ cos(it.Angle - Math::PI2), sin(it.Angle - Math::PI2) };
 
 		arr[i++] = {
 			it.Position - Top * s.y - Left * s.x,

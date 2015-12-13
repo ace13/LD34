@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iterator>
 #include <vector>
 
 Level::File::File(const char* data, size_t size) :
@@ -80,7 +81,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	OnDisk::Header lvlHeader = *(const OnDisk::Header*)data;
 
 	if (len < sizeof(OnDisk::Header) +
-		sizeof(OnDisk::PlayerData) +
+		sizeof(OnDisk::PlayerObj) +
 		(lvlHeader.Rows * sizeof(uint64_t)) +
 		(lvlHeader.ObjCount * sizeof(OnDisk::ObjDef)))
 		return false;
@@ -105,8 +106,33 @@ bool Level::saveToFile(const std::string& file)
 	return false;
 }
 
+bool Level::bakeFile(const std::string& file)
+{
+	std::ifstream ifs(file.c_str());
+	if (!ifs)
+		return false;
+
+	ifs.seekg(0, std::ios::end);
+	size_t len = size_t(ifs.tellg());
+	ifs.seekg(0, std::ios::beg);
+
+	std::vector<char> data(len);
+	if (!ifs.read(&data[0], len))
+		return false;
+
+	std::string lower;
+	std::transform(file.begin(), file.end(), std::back_inserter(lower), ::tolower);
+
+	mFiles[lower] = std::move(data);
+
+	return true;
+}
+
 Level::File&& Level::getContained(const std::string& name) const
 {
+	std::string lower;
+	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
+
 	if (mFiles.count(name) > 0)
 		return std::move(File(&mFiles.at(name)[0], mFiles.at(name).size()));
 

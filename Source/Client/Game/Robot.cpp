@@ -3,6 +3,8 @@
 
 #include "../ParticleManager.hpp"
 
+#include <Core/Math.hpp>
+
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 
@@ -35,7 +37,7 @@ Robot::~Robot()
 
 void Robot::tick(const Timespan& span)
 {
-	const float MoveSpeed = 250;
+	const float MoveSpeed = 150;
 	const float AccelerationSpeed = 2;
 	const float RotationSpeed = 2;
 
@@ -49,8 +51,8 @@ void Robot::tick(const Timespan& span)
 	if (mParticles && (mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
 	{
 		sf::Vector2f tmp{
-			cos(mState.Angle + (3.14159f / 2)),
-			sin(mState.Angle + (3.14159f / 2))
+			cos(mState.Angle + Math::PI2),
+			sin(mState.Angle + Math::PI2)
 		};
 
 		mParticles->addParticle(TRACK_PARTICLE, mPosition + (tmp * 10.f), {}, mState.Angle);
@@ -68,7 +70,7 @@ void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	shape.setPoint(4, { 0, -10 });
 
 	shape.setPosition(mPosition);
-	shape.setRotation(mState.Angle * (180 / 3.14159f));
+	shape.setRotation(mState.Angle * Math::RAD2DEG);
 
 	target.draw(shape, states);
 }

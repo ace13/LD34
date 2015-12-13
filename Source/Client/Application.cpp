@@ -6,6 +6,7 @@
 #include "States/GameState.hpp"
 #include "States/IntroState.hpp"
 
+#include <Core/Math.hpp>
 #include <Core/Time.hpp>
 #include <Core/FileWatcher.hpp>
 
@@ -207,6 +208,7 @@ void Application::init()
 		AS_ASSERT(eng->RegisterGlobalFunction("void println(string&in)", asFUNCTION(println<const std::string&>), asCALL_CDECL));
 		AS_ASSERT(eng->RegisterGlobalFunction("void println(const ?&in)", asFUNCTION(printlnany), asCALL_CDECL));
 	});
+	Math::registerScriptData(man);
 	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
 	mEngine.get<ResourceManager>().registerScript(man);

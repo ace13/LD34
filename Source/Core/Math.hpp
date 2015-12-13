@@ -1,7 +1,16 @@
 #pragma once
 
+class ScriptManager;
+
 namespace Math
 {
+
+static constexpr float PI = 3.141592653589793238463f;
+static constexpr float PI2 = PI/2;
+static constexpr float DEG2RAD = PI / 180;
+static constexpr float RAD2DEG = 180 / PI;
+
+extern void registerScriptData(ScriptManager&);
 
 /** Calculate the dot product between two vectors
  */
