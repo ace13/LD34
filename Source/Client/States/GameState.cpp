@@ -18,7 +18,7 @@
 GameState::GameState() :
 	mNextExec(Clock::now()), mDot(0), mDir(-1)
 {
-	mRobot.setProgram(new BaseProgram());
+
 }
 GameState::~GameState()
 {
@@ -31,7 +31,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	tmp.zoom(0.5);
 	rt->setView(tmp);
 
-	mRobot.passParticleManager(&mPreParticles);
+	mLevel.setEngine(&getEngine());
 
 	mTick = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
 	mTickFail = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-fail.wav");
@@ -40,7 +40,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
 	sman.setPreLoadCallback(Entity::preLoadInject);
-	sman.getEngine()->SetUserData(this, 0x64EE);
+	sman.getEngine()->SetUserData(&mLevel, 0x1EE7);
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
@@ -48,13 +48,30 @@ void GameState::enter(sf::RenderTarget* rt)
 	{
 		sman.loadFromFile(script);
 	}
+
+	mLevel.loadFromFile("Test");
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({ 10, 10 });
+	for (int x = 0; x < 10; ++x)
+	{
+		for (int y = 0; y < 10; ++y)
+		{
+			if ((x > 0 && x < 9) && (y != 0 && y != 9))
+				continue;
+
+			mLevel.setBlocked(x, y);
+		}
+	}
+
+	mLevel.setScale(100);
+	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
+	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
 }
 void GameState::exit(sf::RenderTarget*)
 {
-	for (auto& ent : mEntities)
-		ent->release();
-
-	mEntities.clear();
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.clearPreLoadCallback();
 	sman.getEngine()->SetUserData(nullptr, 0x64EE);
@@ -77,8 +94,8 @@ void GameState::tick(const Timespan& dt)
 {
 	if (Clock::now() >= mNextExec)
 	{
-		std::string name = mRobot.getProgram()->getName(mCurCommand);
-		if (mRobot.execute(mCurCommand) || !name.empty())
+		std::string name = mLevel.getPlayer().getProgram()->getName(mCurCommand);
+		if (mLevel.getPlayer().execute(mCurCommand) || !name.empty())
 		{
 			mHistory.push_front(name);
 			if (mHistory.size() > 5)
@@ -122,9 +139,7 @@ void GameState::tick(const Timespan& dt)
 		}
 	}
 
-	mRobot.tick(dt);
-	for (auto& it : mEntities)
-		it->tick(dt);
+	mLevel.tick(dt);
 }
 void GameState::update(const Timespan& dt)
 {
@@ -132,23 +147,18 @@ void GameState::update(const Timespan& dt)
 
 	mPreParticles.update(dt);
 	mPostParticles.update(dt);
-	for (auto& it : mEntities)
-		it->update(dt);
 }
 void GameState::draw(sf::RenderTarget& target)
 {
 	auto view = target.getView();
-	view.move((mRobot.getPosition() - view.getCenter()) * 0.001f);
+	view.move((mLevel.getPlayer().getPosition() - view.getCenter()) * 0.001f);
 
 	target.setView(view);
-	target.clear(sf::Color(0x4A, 0x70, 0x23));
+	target.clear(mLevel.getBackgroundColor());
 
 	mPreParticles.draw(target);
 
-	for (auto& it : mEntities)
-		it->draw(target, {});
-
-	target.draw(mRobot);
+	mLevel.draw(target);
 
 	mPostParticles.draw(target);
 
@@ -188,11 +198,4 @@ void GameState::drawUI(sf::RenderTarget& target)
 
 		commandString.move(0, rect.height + 5);
 	}
-}
-
-void GameState::injectEntity(Entity* ent)
-{
-	ent->addRef();
-
-	mEntities.push_back(ent);
 }

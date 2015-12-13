@@ -42,8 +42,13 @@ public:
 	Level();
 	~Level();
 
+	void tick(const Timespan& dt);
+	void update(const Timespan& dt);
+	void draw(sf::RenderTarget& rt);
+
 	void setEngine(Engine*);
 
+	void clearLevel();
 	bool loadFromFile(const std::string& file);
 	bool loadFromMemory(const void* data, size_t len);
 	bool loadFromStream(sf::InputStream& file);
@@ -54,12 +59,40 @@ public:
 	bool bakeFile(const std::string& file);
 	File&& getContained(const std::string& name) const;
 
+	float getScale() const;
+	void setScale(float scale);
+
+	const sf::Vector2u& getSize() const;
+	void setSize(const sf::Vector2u&);
+
+	bool isBlocked(uint8_t x, uint8_t y) const;
+	void setBlocked(uint8_t x, uint8_t y, bool blocked = true);
+
+	const sf::Color& getBackgroundColor() const;
+	void setBackgroundColor(const sf::Color&);
+	const sf::Color& getForegroundColor() const;
+	void setForegroundColor(const sf::Color&);
+
+	Robot& getPlayer();
+	const Robot& getPlayer() const;
+
+	void addEntity(Entity* ent);
+	void removeEntity(Entity* ent);
+	const std::list<Entity*>& getEntities() const;
+
+	int getNumberOfGoals() const;
+	int getNumberOfCompletedGoals() const;
+
+	const asIScriptModule* getScriptModule() const;
+	void setScriptModule(asIScriptModule* mod);
+
 private:
 	typedef uint32_t RowWidth;
 
 	Engine* mEngine;
 
 	float mScale;
+	bool mFlipped;
 	sf::Vector2u mSize;
 	std::vector<RowWidth> mBitmap;
 	sf::Color mBackground, mForeground;

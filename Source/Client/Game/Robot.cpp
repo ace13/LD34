@@ -46,7 +46,8 @@ void Robot::tick(const Timespan& span)
 	mState.Angle += (mTargetState.Angle - mState.Angle) * dt * RotationSpeed;
 	mState.Speed += (mTargetState.Speed - mState.Speed) * dt * AccelerationSpeed;
 
-	mPosition += sf::Vector2f(cos(mState.Angle) * mState.Speed, sin(mState.Angle) * mState.Speed) * MoveSpeed * dt;
+	move(sf::Vector2f(cos(mState.Angle) * mState.Speed, sin(mState.Angle) * mState.Speed) * MoveSpeed * dt);
+	setRotation(mState.Angle * Math::RAD2DEG);
 
 	if (mParticles && (mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
 	{
@@ -55,22 +56,22 @@ void Robot::tick(const Timespan& span)
 			sin(mState.Angle + Math::PI2)
 		};
 
-		mParticles->addParticle(TRACK_PARTICLE, mPosition + (tmp * 10.f), {}, mState.Angle);
-		mParticles->addParticle(TRACK_PARTICLE, mPosition - (tmp * 10.f), {}, mState.Angle);
+		auto& pos = getPosition();
+		mParticles->addParticle(TRACK_PARTICLE, pos + (tmp * 10.f), {}, mState.Angle);
+		mParticles->addParticle(TRACK_PARTICLE, pos - (tmp * 10.f), {}, mState.Angle);
 	}
 }
 
 void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+	states.transform *= getTransform();
+
 	sf::ConvexShape shape(5);
 	shape.setPoint(0, { 20, 0 });
 	shape.setPoint(1, { 0, 10 });
 	shape.setPoint(2, { -20, 10 });
 	shape.setPoint(3, { -20, -10 });
 	shape.setPoint(4, { 0, -10 });
-
-	shape.setPosition(mPosition);
-	shape.setRotation(mState.Angle * Math::RAD2DEG);
 
 	target.draw(shape, states);
 }
@@ -86,23 +87,6 @@ bool Robot::execute(const std::string& command)
 void Robot::passParticleManager(ParticleManager* pman)
 {
 	mParticles = pman;
-}
-
-const sf::Vector2f& Robot::getPosition() const
-{
-	return mPosition;
-}
-void Robot::setPosition(const sf::Vector2f& pos)
-{
-	mPosition = pos;
-}
-float Robot::getRotation() const
-{
-	return mState.Angle;
-}
-void Robot::setRotation(float ang)
-{
-	mState.Angle = ang;
 }
 
 const Program* Robot::getProgram() const
@@ -125,4 +109,11 @@ void Robot::setSpeed(float speed)
 void Robot::turn(float amount)
 {
 	mTargetState.Angle = mTargetState.Angle + amount;
+}
+
+void Robot::initialize()
+{
+	mTargetState.Speed = 0;
+	mTargetState.Angle = getRotation() * Math::DEG2RAD;
+	mState = mTargetState;
 }

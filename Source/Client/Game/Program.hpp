@@ -11,10 +11,16 @@ class Program
 public:
 	virtual ~Program() { }
 
+	virtual const std::string& getName() const;
+
 	virtual bool execute(const std::string& command, Robot& actor);
 	virtual const std::string& getName(const std::string& opcode) const;
 
+	static Program* createProgramming(const std::string& name);
+
 protected:
+	Program(const std::string& name);
+
 	void addOpcode(const std::string& opcode, const std::string& name, const std::function<void(Robot&)>& func);
 	void eraseOpcode(const std::string& op);
 
@@ -26,6 +32,7 @@ private:
 	};
 
 	std::unordered_map<std::string, OpCode> mOpcodes;
+	std::string mName;
 };
 
 class BaseProgram : public Program

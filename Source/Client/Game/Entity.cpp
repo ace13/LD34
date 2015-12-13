@@ -1,5 +1,5 @@
 #include "Entity.hpp"
-#include "../States/GameState.hpp"
+#include "Level.hpp"
 
 #include <Core/AS_Addons/scriptarray/scriptarray.h>
 #include <Core/ScriptManager.hpp>
@@ -54,12 +54,13 @@ Entity* Entity::createFromScript()
 	});
 
 	if (ctx->GetUserData(0x1EC7) != (void*)0x01)
-		((GameState*)ctx->GetEngine()->GetUserData(0x64EE))->injectEntity(toRet);
+		((Level*)ctx->GetEngine()->GetUserData(0x1EE7))->addEntity(toRet);
 
 	return toRet;
 }
 
 Entity::Entity() :
+	mLevel(nullptr),
 	mScript(nullptr),
 	mObject(nullptr),
 	mRefCount(1),
@@ -73,7 +74,8 @@ Entity::~Entity()
 {
 	if (mScript)
 	{
-		mObject->Release();
+		if (!mScript->Get())
+			mObject->Release();
 		mScript->Release();
 	}
 }
@@ -145,7 +147,7 @@ bool Entity::serialize(char* data, size_t size) const
 	{
 		auto* eng = mObject->GetEngine();
 
-		asIObjectType* t = eng->GetObjectTypeByDecl("array<char>");
+		asIObjectType* t = eng->GetObjectTypeByDecl("array<int8>");
 		CScriptArray* arr = CScriptArray::Create(t, size);
 
 		auto* ctx = eng->RequestContext();
@@ -179,7 +181,7 @@ bool Entity::deserialize(const char* data, size_t size)
 	{
 		auto* eng = mObject->GetEngine();
 
-		asIObjectType* t = eng->GetObjectTypeByDecl("array<char>");
+		asIObjectType* t = eng->GetObjectTypeByDecl("array<int8>");
 		CScriptArray* arr = CScriptArray::Create(t, size);
 		for (uint32_t i = 0; i < size; ++i)
 		{
@@ -237,6 +239,19 @@ void Entity::setGoal(bool isGoal)
 void Entity::setCompleted(bool completed)
 {
 	mIsCompleted = completed;
+}
+
+const Level* Entity::getLevel() const
+{
+	return mLevel;
+}
+Level* Entity::getLevel()
+{
+	return mLevel;
+}
+void Entity::setLevel(Level* l)
+{
+	mLevel = l;
 }
 
 const asIScriptObject* Entity::getScriptObject() const

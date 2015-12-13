@@ -3,6 +3,14 @@
 
 #include <Core/Math.hpp>
 
+#include <iostream>
+
+Program::Program(const std::string& name) :
+	mName(name)
+{
+
+}
+
 bool Program::execute(const std::string& command, Robot& actor)
 {
 	if (mOpcodes.count(command))
@@ -12,6 +20,11 @@ bool Program::execute(const std::string& command, Robot& actor)
 	}
 
 	return false;
+}
+
+const std::string& Program::getName() const
+{
+	return mName;
 }
 
 const std::string& Program::getName(const std::string& opcode) const
@@ -27,6 +40,15 @@ const std::string& Program::getName(const std::string& opcode) const
 		return Nop;
 }
 
+Program* Program::createProgramming(const std::string& name)
+{
+	if (name == "BaseProgramming")
+		return new BaseProgram();
+
+	std::cout << "Unknown programming " << name << std::endl;
+	return new BaseProgram();
+}
+
 void Program::addOpcode(const std::string& op, const std::string& name, const std::function<void(Robot&)>& func)
 {
 	mOpcodes[op] = { name, func };
@@ -36,7 +58,7 @@ void Program::eraseOpcode(const std::string& op)
 	mOpcodes.erase(op);
 }
 
-BaseProgram::BaseProgram()
+BaseProgram::BaseProgram() : Program("BaseProgramming")
 {
 	addOpcode("0", "STOP", [](Robot& r) { r.setSpeed(0); });
 	addOpcode("1", "FULL_FORWARD", [](Robot& r) { r.setSpeed(1); });

@@ -20,7 +20,10 @@ StateMachine::~StateMachine()
 	}
 
 	if (mCurState)
+	{
+		mCurState->exit(mLastSeenRT);
 		delete mCurState;
+	}
 }
 
 void StateMachine::event(const sf::Event& ev)

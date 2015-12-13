@@ -3,6 +3,7 @@
 #include <Core/Time.hpp>
 
 #include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/Transformable.hpp>
 #include <SFML/System/Vector2.hpp>
 
 #include <string>
@@ -10,7 +11,7 @@
 class ParticleManager;
 class Program;
 
-class Robot : public sf::Drawable
+class Robot : public sf::Transformable, public sf::Drawable
 {
 public:
 	Robot();
@@ -23,16 +24,13 @@ public:
 	
 	void passParticleManager(ParticleManager*);
 
-	const sf::Vector2f& getPosition() const;
-	void setPosition(const sf::Vector2f& pos);
-	float getRotation() const;
-	void setRotation(float ang);
-
 	const Program* getProgram() const;
 	void setProgram(Program* prog);
 
 	void setSpeed(float speed);
 	void turn(float amount);
+
+	void initialize();
 
 private:
 	struct State
@@ -44,7 +42,6 @@ private:
 	int mTick;
 	ParticleManager* mParticles;
 	State mState, mTargetState;
-	sf::Vector2f mPosition;
 
 	Program* mCurProgram;
 };

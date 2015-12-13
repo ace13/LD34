@@ -1,8 +1,7 @@
 #pragma once
 
 #include "IState.hpp"
-#include "../Game/Entity.hpp"
-#include "../Game/Robot.hpp"
+#include "../Game/Level.hpp"
 
 #include "../ParticleManager.hpp"
 #include "../ResourceManager.hpp"
@@ -26,13 +25,11 @@ public:
 	virtual void draw(sf::RenderTarget&);
 	virtual void drawUI(sf::RenderTarget&);
 
-	void injectEntity(Entity* ent);
-
 private:
 	std::string mCurCommand;
 	std::list<std::string> mScripts;
 	std::list<std::string> mHistory;
-	std::list<Entity*> mEntities;
+	Level mLevel;
 
 	float mDot, mDir, mOff;
 
@@ -40,7 +37,6 @@ private:
 	ResourceManager::Sound mTick, mTickFail, mTickSucceed;
 
 	Timestamp mNextExec;
-	Robot mRobot;
 
 	ParticleManager mPreParticles;
 	ParticleManager mPostParticles;

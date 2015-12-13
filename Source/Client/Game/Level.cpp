@@ -4,11 +4,14 @@
 
 #include "Level.hpp"
 #include "Entity.hpp"
+#include "Program.hpp"
 
 #include <Core/Engine.hpp>
 #include <Core/Math.hpp>
 #include <Core/ScriptManager.hpp>
 
+#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/System/InputStream.hpp>
 
 #include <algorithm>
@@ -106,8 +109,10 @@ Level::File::operator bool() const
 
 int64_t Level::File::read(void* data, int64_t size)
 {
-	size_t toRead = std::max(std::min(mSize - mGetP, mGetP + size_t(size)), size_t(0));
+	size_t toRead = std::max(std::min(mSize - mGetP, size_t(size)), size_t(0));
 	std::copy(mData + mGetP, mData + mGetP + toRead, (char*)data);
+
+	mGetP += toRead;
 
 	return toRead;
 }
@@ -142,9 +147,89 @@ Level::~Level()
 		mScriptModule->Discard();
 }
 
+void Level::tick(const Timespan& dt)
+{
+	mPlayer.tick(dt);
+	for (auto& it : mEntities)
+		it->tick(dt);
+}
+void Level::update(const Timespan& dt)
+{
+//	mPlayer.update(dt);
+	for (auto& it : mEntities)
+		it->update(dt);
+}
+void Level::draw(sf::RenderTarget& rt)
+{
+	sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4);
+
+	int maxWidth = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.y : mSize.x));
+	for (int i = 0; i < mBitmap.size(); ++i)
+	{
+		for (int j = 0; j < maxWidth; ++j)
+		{
+			int x, y;
+			if (mFlipped)
+			{
+				x = j; y = i;
+			}
+			else
+			{
+				x = i; y = j;
+			}
+
+			if (!isBlocked(x, y))
+				continue;
+
+			foreground.append({
+				{ x*mScale - mScale / 2, y*mScale - mScale / 2 },
+				mForeground
+			});
+			foreground.append({
+				{ x*mScale + mScale / 2, y*mScale - mScale / 2 },
+				mForeground
+			});
+			foreground.append({
+				{ x*mScale + mScale / 2, y*mScale + mScale / 2 },
+				mForeground
+			});
+			foreground.append({
+				{ x*mScale - mScale / 2, y*mScale + mScale / 2 },
+				mForeground
+			});
+		}
+	}
+
+	rt.draw(foreground);
+
+	rt.draw(mPlayer);
+	for (auto& it : mEntities)
+		rt.draw(*it);
+}
+
 void Level::setEngine(Engine* eng)
 {
 	mEngine = eng;
+}
+
+void Level::clearLevel()
+{
+	mScale = 1;
+	mSize = {};
+	mBitmap.clear();
+	mBackground = sf::Color::Black;
+	mForeground = sf::Color::White;
+	mPlayer = {};
+
+	for (auto& it : mEntities)
+		it->release();
+	mEntities.clear();
+
+	if (mScriptModule)
+		mScriptModule->Discard();
+	mScriptModule = nullptr;
+
+	mFileData.clear();
 }
 
 bool Level::loadFromFile(const std::string& file)
@@ -173,35 +258,40 @@ bool Level::loadFromMemory(const void* data, size_t len)
 
 	File reader((const char*)data, len);
 
-	OnDisk::Version version;
+	OnDisk::Version version = {};
 	reader.read(&version, sizeof(OnDisk::Version));
 
 	if (version != FILE_VERSION)
 		return false;
 
-	OnDisk::Header lvlHeader;
+	OnDisk::Header lvlHeader = {};
 	reader.read(&lvlHeader, sizeof(OnDisk::Header));
 
-	if (len < sizeof(OnDisk::Version) +
+	size_t minSize = 
+		sizeof(OnDisk::Version) +
 		sizeof(OnDisk::Header) +
 		sizeof(OnDisk::PlayerObj) +
 		(lvlHeader.Rows * sizeof(OnDisk::Row)) +
 		(lvlHeader.ObjCount * sizeof(OnDisk::ObjDef)) +
-		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile))
-		)
+		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile));
+
+	if (len < minSize)
 		return false;
 
-	OnDisk::PlayerObj player;
+	OnDisk::PlayerObj player = {};
 	reader.read(&player, sizeof(OnDisk::PlayerObj));
 
 	std::vector<OnDisk::Row> rows(lvlHeader.Rows);
-	reader.read(&rows[0], lvlHeader.Rows * sizeof(OnDisk::Row));
+	if (!rows.empty())
+		reader.read(&rows[0], lvlHeader.Rows * sizeof(OnDisk::Row));
 
 	std::vector<OnDisk::ObjDef> objs(lvlHeader.ObjCount);
-	reader.read(&objs[0], lvlHeader.ObjCount * sizeof(OnDisk::ObjDef));
+	if (!objs.empty())
+		reader.read(&objs[0], lvlHeader.ObjCount * sizeof(OnDisk::ObjDef));
 
 	std::vector<OnDisk::ContainedFile> files(lvlHeader.ContainedFiles);
-	reader.read(&files[0], lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile));
+	if (!files.empty())
+		reader.read(&files[0], lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile));
 
 	std::unordered_map<std::string, std::vector<char>> fileData;
 	for (auto& file : files)
@@ -214,7 +304,8 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	}
 
 	// Load succeeded
-
+	clearLevel();
+	
 	if (lvlHeader.Flipped)
 	{
 		mSize.x = lvlHeader.Rows;
@@ -235,8 +326,10 @@ bool Level::loadFromMemory(const void* data, size_t len)
 			player.PosY * mScale
 		});
 		mPlayer.setRotation(
-			player.Dir * Math::PI2
+			player.Dir * 90
 		);
+
+		mPlayer.setProgram(Program::createProgramming(player.Programming));
 	}
 
 	mFileData = std::move(fileData);
@@ -258,18 +351,18 @@ bool Level::loadFromMemory(const void* data, size_t len)
 			ent->deserialize(it.ObjectData, sizeof(it.ObjectData));
 
 			ent->setPosition(it.PosX * mScale, it.PosY * mScale);
-			ent->setRotation(it.Dir * 90);
+			ent->setRotation(float(it.Dir) * 90);
 
-			mEntities.push_back(ent);
+			addEntity(ent);
 		}
 		else
 		{
 			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData);
 
 			ent->setPosition(it.PosX * mScale, it.PosY * mScale);
-			ent->setRotation(it.Dir * 90);
+			ent->setRotation(float(it.Dir) * 90);
 
-			mEntities.push_back(ent);
+			addEntity(ent);
 		}
 	}
 
@@ -354,15 +447,19 @@ bool Level::saveToFile(const std::string& file) const
 	}
 
 	ofs.write((const char*)&head, sizeof(OnDisk::Header));
-	OnDisk::PlayerObj player;
+	OnDisk::PlayerObj player = {};
 
 	auto pos = mPlayer.getPosition() / mScale;
 	player.PosX = uint8_t(pos.x);
-	player.PosX = uint8_t(pos.y);
+	player.PosY = uint8_t(pos.y);
 	player.Dir = uint8_t(mPlayer.getRotation() / Math::PI2) % 4;
 
+	std::string name = mPlayer.getProgram()->getName();
+	std::copy_n(name.c_str(), name.size(), player.Programming);
+
 	ofs.write((const char*)&player, sizeof(OnDisk::PlayerObj));
-	ofs.write((const char*)&mBitmap[0], sizeof(OnDisk::Row) * head.Rows);
+	if (!mBitmap.empty())
+		ofs.write((const char*)&mBitmap[0], sizeof(OnDisk::Row) * head.Rows);
 
 	std::vector<OnDisk::ObjDef> objs(head.ObjCount);
 	int i = 0;
@@ -391,6 +488,8 @@ bool Level::saveToFile(const std::string& file) const
 
 		ent->serialize(o.ObjectData, sizeof(o.ObjectData));
 	}
+	if (!objs.empty())
+		ofs.write((const char*)&objs[0], sizeof(OnDisk::ObjDef) * objs.size());
 
 	std::vector<OnDisk::ContainedFile> files(head.ContainedFiles);
 	i = 0;
@@ -405,12 +504,15 @@ bool Level::saveToFile(const std::string& file) const
 		std::copy_n(fileData.first.c_str(), fileData.first.size(), f.FileName);
 	}
 
-	if (!ofs.write((const char*)&files[0], files.size() * sizeof(OnDisk::ContainedFile)))
-		return false;
-
-	for (auto& fileData : mFileData)
-		if (!ofs.write(&fileData.second[0], fileData.second.size()))
+	if (!files.empty())
+	{
+		if (!ofs.write((const char*)&files[0], files.size() * sizeof(OnDisk::ContainedFile)))
 			return false;
+
+		for (auto& fileData : mFileData)
+			if (!ofs.write(&fileData.second[0], fileData.second.size()))
+				return false;
+	}
 
 	return true;
 }
@@ -454,4 +556,130 @@ Level::File&& Level::getContained(const std::string& name) const
 		return std::move(File(&mFileData.at(name)[0], mFileData.at(name).size()));
 
 	return std::move(File(nullptr, 0));
+}
+
+float Level::getScale() const
+{
+	return mScale;
+}
+void Level::setScale(float scale)
+{
+	mScale = scale;
+}
+
+const sf::Vector2u& Level::getSize() const
+{
+	return mSize;
+}
+void Level::setSize(const sf::Vector2u& s)
+{
+	mSize = s;
+
+	mFlipped = mSize.x > sizeof(RowWidth) * 8;
+	
+	if (mFlipped)
+		mBitmap.resize(mSize.x);
+	else
+		mBitmap.resize(mSize.y);
+}
+
+bool Level::isBlocked(uint8_t x, uint8_t y) const
+{
+	if (mFlipped)
+		return (mBitmap[x] & (1 << y)) != 0;
+	return (mBitmap[y] & (1 << x)) != 0;
+}
+void Level::setBlocked(uint8_t x, uint8_t y, bool blocked)
+{
+	if (blocked)
+	{
+		if (mFlipped)
+			mBitmap[x] |= (1 << y);
+		else
+			mBitmap[y] |= (1 << x);
+	}
+	else
+	{
+		if (mFlipped)
+			mBitmap[x] &= ~(1 << y);
+		else
+			mBitmap[y] &= ~(1 << x);
+	}
+}
+
+const sf::Color& Level::getBackgroundColor() const
+{
+	return mBackground;
+}
+void Level::setBackgroundColor(const sf::Color& col)
+{
+	mBackground = col;
+}
+const sf::Color& Level::getForegroundColor() const
+{
+	return mForeground;
+}
+void Level::setForegroundColor(const sf::Color& col)
+{
+	mForeground = col;
+}
+
+Robot& Level::getPlayer()
+{
+	return mPlayer;
+}
+const Robot& Level::getPlayer() const
+{
+	return mPlayer;
+}
+
+void Level::addEntity(Entity* ent)
+{
+	ent->setLevel(this);
+	mEntities.push_back(ent);
+}
+void Level::removeEntity(Entity* ent)
+{
+	auto it = std::find(mEntities.begin(), mEntities.end(), ent);
+	if (it != mEntities.end())
+	{
+		(*it)->release();
+		mEntities.erase(it);
+	}
+}
+const std::list<Entity*>& Level::getEntities() const
+{
+	return mEntities;
+}
+
+int Level::getNumberOfGoals() const
+{
+	int num = 0;
+	for (auto& e : mEntities)
+	{
+		if (e->isGoal())
+			++num;
+	}
+	return num;
+}
+int Level::getNumberOfCompletedGoals() const
+{
+	int num = 0;
+	for (auto& e : mEntities)
+	{
+		if (e->isGoal() && e->isCompleted())
+			++num;
+	}
+	return num;
+}
+
+const asIScriptModule* Level::getScriptModule() const
+{
+	return mScriptModule;
+}
+void Level::setScriptModule(asIScriptModule* mod)
+{
+	if (mScriptModule)
+		mScriptModule->Discard();
+	mScriptModule = mod;
 }

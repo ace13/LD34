@@ -13,6 +13,7 @@ class asIScriptModule;
 class asIScriptObject;
 class asIScriptFunction;
 class ScriptManager;
+class Level;
 
 class Entity : public sf::Transformable, public sf::Drawable
 {
@@ -38,6 +39,9 @@ public:
 	static void registerType(ScriptManager&);
 	static bool preLoadInject(asIScriptModule* mod);
 
+	const Level* getLevel() const;
+	Level* getLevel();
+	void setLevel(Level*);
 	const asIScriptObject* getScriptObject() const;
 
 	static Entity* createFromType(const char* type, const char* data);
@@ -54,6 +58,7 @@ private:
 
 	std::string mName;
 
+	Level* mLevel;
 	asILockableSharedBool* mScript;
 	asIScriptObject* mObject;
 	asIScriptFunction *mTick, *mUpdate, *mDraw;
