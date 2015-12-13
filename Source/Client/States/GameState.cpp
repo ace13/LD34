@@ -54,8 +54,9 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	//loadLevel("Tutorial1.lvl");
+	loadLevel("Tutorial1.lvl");
 
+	/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color::Black);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
@@ -65,30 +66,44 @@ void GameState::enter(sf::RenderTarget* rt)
 	mLevel.getPlayer().setProgram(new BaseProgram());
 
 	mLevel.setSize({
-		3,
+		5,
 		5
 	});
 
 	mLevel.setBlocked(0, 0);
 	mLevel.setBlocked(1, 0);
 	mLevel.setBlocked(2, 0);
+	mLevel.setBlocked(3, 0);
+	mLevel.setBlocked(4, 0);
 	mLevel.setBlocked(0, 1);
-	mLevel.setBlocked(2, 1);
+	mLevel.setBlocked(4, 1);
 	mLevel.setBlocked(0, 2);
 	mLevel.setBlocked(2, 2);
+	mLevel.setBlocked(3, 2);
+	mLevel.setBlocked(4, 2);
+	mLevel.setBlocked(3, 2);
 	mLevel.setBlocked(0, 3);
 	mLevel.setBlocked(2, 3);
+	mLevel.setBlocked(3, 3);
+	mLevel.setBlocked(4, 3);
 	mLevel.setBlocked(0, 4);
 	mLevel.setBlocked(1, 4);
 	mLevel.setBlocked(2, 4);
+	mLevel.setBlocked(3, 4);
+	mLevel.setBlocked(4, 4);
 
 	mLevel.getPlayer().setPosition(225, 525);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 
 	Entity* ent = Entity::createFromType("Goal", nullptr, 0);
-	ent->setPosition(225, 225);
+	ent->setPosition(525, 225);
 	mLevel.addEntity(ent);
+
+	mLevel.bakeFile("level\\tutorial2.as");
+
+	mLevel.saveToFile("Tutorial2.lvl");
+	*/
 
 	// Tutorial1.lvl
 	/*
@@ -257,14 +272,14 @@ void GameState::tick(const Timespan& dt)
 	}
 	else if (mEnded && mEndTimeout <= 0)
 	{
-		getEngine().get<ScriptManager>().runHook("OnLevelEnd");
-
 		mLevel.clearLevel();
 		mHistory.clear();
 		mCurCommand.clear();
 
 		mEnded = false;
 		mEndTimeout = 0;
+
+		getEngine().get<ScriptManager>().runHook("OnLevelEnd");
 	}
 }
 void GameState::update(const Timespan& dt)
