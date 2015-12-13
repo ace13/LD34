@@ -55,7 +55,7 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	loadLevel("Level1.lvl");
+	//loadLevel("Level1.lvl");
 
 #define B(x,y) mLevel.setBlocked(x,y)
 #define U(x,y) do {Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0); \
@@ -67,6 +67,76 @@ ent->setPosition(x*150+75, y*150+75); \
 mLevel.addEntity(ent); } while(false);
 #define P(x,y) mLevel.getPlayer().setPosition(x*150+75, y*150+75);
 	
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		15,
+		9
+	});
+
+	std::string level =
+		"###############"
+		"#############G#"
+		"##P K D  G    #"
+		"############# #"
+		"############R #"
+		"###### ### ## #"
+		"##R           #"
+		"#G  #### ######"
+		"###############";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'K': 
+			{
+				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+				break;
+
+			case 'D':
+			{
+				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} B(x, y);
+				break;
+
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+			case 'R': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(-90);
+	mLevel.getPlayer().initialize();
+
+	mLevel.saveToFile("Level1.lvl");
+
 	// Level1.lvl
 	/*
 	mLevel.setScale(150);

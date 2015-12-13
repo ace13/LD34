@@ -798,7 +798,7 @@ bool Level::findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y)
 	for (auto& it : mEntities)
 	{
 		auto& epos = it->getPosition();
-		if (Math::Length(epos - pos) < it->getRadius())
+		if (Math::Length(epos - pos) <= it->getRadius())
 		{
 			out.push_back(it);
 			found = true;

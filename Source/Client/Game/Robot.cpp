@@ -2,6 +2,7 @@
 #include "Program.hpp"
 #include "Level.hpp"
 #include "Goal.hpp"
+#include "Door.hpp"
 #include "Enemy.hpp"
 
 #include "../ParticleManager.hpp"
@@ -27,6 +28,7 @@ namespace
 
 Robot::Robot() : 
 	mTick(0),
+	mKeyCount(0),
 	mLevel(nullptr),
 	mParticles(nullptr),
 	mCurProgram(nullptr),
@@ -58,40 +60,60 @@ void Robot::tick(const Timespan& span)
 	if (!mLevel->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
 	{
 		move(newPos);
-
-		auto levelPos = getPosition() / mLevel->getScale();
-		std::list<Entity*> standingOn;
-		if (mLevel->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
-			for (auto& it : standingOn)
-			{
-				if (it->getName() == "Goal")
-				{
-					Goal* test = dynamic_cast<Goal*>(it);
-					if (!test->isCompleted())
-					{
-						test->setCompleted();
-
-						mPlayerSound.setBuffer(*test->getSound());
-						mPlayerSound.play();
-					}
-				}
-				else if (it->getName() == "BasicEnemy")
-				{
-					Enemy* test = (Enemy*)it;
-
-					mPlayerSound.setBuffer(*mExplodeSound);
-					mPlayerSound.play();
-
-					getLevel()->resetLevel();
-					return;
-				}
-			}
 	}
 	else
 	{
 		mTargetState.Speed = 0;
 		mState.Speed = mState.Speed / -2;
 	}
+
+	auto levelPos = getPosition() / mLevel->getScale();
+	std::list<Entity*> standingOn;
+	if (mLevel->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
+		for (auto& it : standingOn)
+		{
+			auto& otherpos = it->getPosition();
+
+			if (Math::Length(getPosition() - otherpos) > getRadius() + it->getRadius())
+				continue;
+
+			if (it->getName() == "Goal")
+			{
+				Goal* test = dynamic_cast<Goal*>(it);
+				if (!test->isCompleted())
+				{
+					test->setCompleted();
+
+					mPlayerSound.setBuffer(*test->getSound());
+					mPlayerSound.play();
+				}
+			}
+			else if (it->getName() == "BasicEnemy")
+			{
+				Enemy* test = (Enemy*)it;
+
+				mPlayerSound.setBuffer(*mExplodeSound);
+				mPlayerSound.play();
+
+				getLevel()->resetLevel();
+				return;
+			}
+			else if (it->getName() == "Door")
+			{
+				Door* test = (Door*)it;
+
+				if (!test->isOpen() && mKeyCount > 0)
+				{
+					--mKeyCount;
+					test->open();
+				}
+			}
+			else if (it->getName() == "Key")
+			{
+				getLevel()->removeEntity(it);
+				++mKeyCount;
+			}
+		}
 
 	setRotation(mState.Angle * Math::RAD2DEG);
 

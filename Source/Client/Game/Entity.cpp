@@ -1,6 +1,8 @@
 #include "Entity.hpp"
+#include "Door.hpp"
 #include "Enemy.hpp"
 #include "Goal.hpp"
+#include "Key.hpp"
 #include "Level.hpp"
 
 #include <Core/AS_Addons/scriptarray/scriptarray.h>
@@ -14,6 +16,10 @@ Entity* Entity::createFromType(const char* type, const char* data, size_t len)
 		toRet = new Goal();
 	else if (strcmp(type, "BasicEnemy") == 0)
 		toRet = new Enemy();
+	else if (strcmp(type, "Key") == 0)
+		toRet = new Key();
+	else if (strcmp(type, "Door") == 0)
+		toRet = new Door();
 
 	if (toRet)
 		toRet->deserialize(data, len);

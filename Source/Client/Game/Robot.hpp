@@ -50,7 +50,7 @@ private:
 		float Angle;
 	};
 
-	int mTick;
+	int mTick, mKeyCount;
 	Level* mLevel;
 	ParticleManager* mParticles;
 	State mState, mTargetState;
