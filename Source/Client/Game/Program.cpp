@@ -35,7 +35,8 @@ void Program::addOpcode(const std::string& op, const std::string& name, const st
 BaseProgram::BaseProgram()
 {
 	addOpcode("0", "STOP", [](Robot& r) { r.setSpeed(0); });
-	addOpcode("1", "MOVE", [](Robot& r) { r.setSpeed(1); });
+	addOpcode("1", "FULL_FORWARD", [](Robot& r) { r.setSpeed(1); });
+	addOpcode("00", "SLOW_FORWARD", [](Robot& r) { r.setSpeed(0.5); });
 	addOpcode("01", "TURN_LEFT", [](Robot& r) { r.turn(Math::PI / -2); });
 	addOpcode("10", "TURN_RIGHT", [](Robot& r) { r.turn(Math::PI / 2); });
 	addOpcode("11", "BACK_THAT_ASS_UP", [](Robot& r) { r.setSpeed(-0.5); });

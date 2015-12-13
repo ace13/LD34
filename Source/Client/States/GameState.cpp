@@ -95,7 +95,7 @@ void GameState::tick(const Timespan& dt)
 			else
 			{
 				mTickSound.setBuffer(*mTickFail);
-				mTickSound.setVolume(50);
+				mTickSound.setVolume(40);
 			}
 		}
 		else
