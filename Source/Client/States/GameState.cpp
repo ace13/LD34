@@ -2,6 +2,7 @@
 
 #include "../Application.hpp"
 #include "../Game/Entity.hpp"
+#include "../Game/Goal.hpp"
 #include "../Game/Program.hpp"
 
 
@@ -44,18 +45,53 @@ void GameState::enter(sf::RenderTarget* rt)
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
-	mLevel.loadFromFile("Test4");
-
 	for (auto& script : mScripts)
 	{
 		sman.loadFromFile(script);
 	}
 
-	mLevel.getPlayer().passParticleManager(&mPreParticles);
 	
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color::Black);
+	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
+	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		3,
+		5
+	});
+
+	mLevel.setBlocked(0, 0);
+	mLevel.setBlocked(1, 0);
+	mLevel.setBlocked(2, 0);
+	mLevel.setBlocked(0, 1);
+	mLevel.setBlocked(2, 1);
+	mLevel.setBlocked(0, 2);
+	mLevel.setBlocked(2, 2);
+	mLevel.setBlocked(0, 3);
+	mLevel.setBlocked(2, 3);
+	mLevel.setBlocked(0, 4);
+	mLevel.setBlocked(1, 4);
+	mLevel.setBlocked(2, 4);
+
+	mLevel.getPlayer().setPosition(225, 525);
+	mLevel.getPlayer().setRotation(-90);
+	mLevel.getPlayer().initialize();
+
+	Entity* ent = Entity::createFromType("Goal", nullptr, 0);
+	ent->setPosition(225, 225);
+	mLevel.addEntity(ent);
+
+	mLevel.saveToFile("Tutorial1");
+	//mLevel.loadFromFile("Tutorial1");
+
 	/*
+	
 	mLevel.getPlayer().setPosition({
-		200,200
+		225,225
 	});
 
 	mLevel.getPlayer().setProgram(new BaseProgram());
@@ -77,14 +113,17 @@ void GameState::enter(sf::RenderTarget* rt)
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
 	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
 
+	*
+
+	/*
 	auto* ent = Entity::createForScript(sman.getEngine()->GetModule("game\\robot.as"), "Robot");
 	ent->setPosition(500, 500);
 	mLevel.addEntity(ent);
-
-	mLevel.bakeFile("Game\\robot.as");
-
-	mLevel.saveToFile("Test4");
 	*/
+
+	//mLevel.bakeFile("Game\\robot.as");
+
+	
 }
 void GameState::exit(sf::RenderTarget*)
 {
@@ -163,6 +202,7 @@ void GameState::update(const Timespan& dt)
 
 	mPreParticles.update(dt);
 	mPostParticles.update(dt);
+	mLevel.update(dt);
 }
 void GameState::draw(sf::RenderTarget& target)
 {

@@ -47,6 +47,8 @@ public:
 	void drawBackface(sf::RenderTarget& rt);
 	void draw(sf::RenderTarget& rt);
 
+	Engine* getEngine();
+	const Engine* getEngine() const;
 	void setEngine(Engine*);
 
 	void clearLevel();
@@ -78,6 +80,8 @@ public:
 
 	Robot& getPlayer();
 	const Robot& getPlayer() const;
+
+	bool findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y);
 
 	void addEntity(Entity* ent);
 	void removeEntity(Entity* ent);

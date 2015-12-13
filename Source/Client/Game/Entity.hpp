@@ -35,6 +35,8 @@ public:
 	virtual bool isGoal() const;
 	virtual bool isCompleted() const;
 
+	virtual void initialize();
+
 	int addRef();
 	int release();
 
@@ -49,7 +51,7 @@ public:
 	void setLevel(Level*);
 	const asIScriptObject* getScriptObject() const;
 
-	static Entity* createFromType(const char* type, const char* data);
+	static Entity* createFromType(const char* type, const char* data, size_t len);
 	static Entity* createForScript(asIScriptModule* module, const char* type);
 
 protected:

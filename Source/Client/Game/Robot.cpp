@@ -1,6 +1,7 @@
 #include "Robot.hpp"
 #include "Program.hpp"
 #include "Level.hpp"
+#include "Goal.hpp"
 
 #include "../ParticleManager.hpp"
 
@@ -52,7 +53,24 @@ void Robot::tick(const Timespan& span)
 
 	auto checkPos = getPosition() + newPos * mRadius;
 	if (!mLevel->isBlocked(checkPos.x / mLevel->getScale(), checkPos.y / mLevel->getScale()))
+	{
 		move(newPos);
+
+		auto levelPos = getPosition() / mLevel->getScale();
+		std::list<Entity*> standingOn;
+		if (mLevel->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
+			for (auto& it : standingOn)
+			{
+				Goal* test = dynamic_cast<Goal*>(it);
+				if (test && !test->isCompleted())
+				{
+					test->setCompleted();
+
+					mPlayerSound.setBuffer(*test->getSound());
+					mPlayerSound.play();
+				}
+			}
+	}
 	else
 	{
 		mTargetState.Speed = 0;

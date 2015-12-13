@@ -29,18 +29,19 @@ namespace
 
 		struct Header
 		{
-			uint8_t Flipped : 1;
-			uint8_t Rows : 6;
-			uint8_t Unused : 1;
+			uint16_t Flipped : 1;
+			uint16_t Rows : 6;
+			uint16_t Cols : 6;
+			uint16_t Unused2 : 3;
 
 			uint64_t ObjCount : 7;
 			uint64_t ContainedFiles : 7;
 			uint64_t BackgroundColor : 24;
 			uint64_t ForegroundColor : 24;
-			uint64_t Unused2 : 2;
+			uint64_t Unused3 : 2;
 
 			uint32_t OutsideColor : 24;
-			uint32_t Unused3 : 16;
+			uint32_t Unused4 : 16;
 
 			float Scale;
 
@@ -92,7 +93,7 @@ namespace
 	};
 #pragma pack(pop)
 
-	static const OnDisk::Version FILE_VERSION = 3;
+	static const OnDisk::Version FILE_VERSION = 4;
 }
 
 Level::File::File(const char* data, size_t size) :
@@ -188,20 +189,10 @@ void Level::drawBackface(sf::RenderTarget& rt)
 		mBackground
 	});
 
-	for (int i = 0; i < int(mBitmap.size()); ++i)
+	for (int x = 0; x < int(mSize.x); ++x)
 	{
-		for (int j = 0; j < maxWidth; ++j)
+		for (int y = 0; y < int(mSize.y); ++y)
 		{
-			int x, y;
-			if (mFlipped)
-			{
-				x = j; y = i;
-			}
-			else
-			{
-				x = i; y = j;
-			}
-
 			if (!isBlocked(x, y))
 				continue;
 
@@ -228,11 +219,20 @@ void Level::drawBackface(sf::RenderTarget& rt)
 }
 void Level::draw(sf::RenderTarget& rt)
 {
-	rt.draw(mPlayer);
 	for (auto& it : mEntities)
 		rt.draw(*it);
+
+	rt.draw(mPlayer);
 }
 
+Engine* Level::getEngine()
+{
+	return mEngine;
+}
+const Engine* Level::getEngine() const
+{
+	return mEngine;
+}
 void Level::setEngine(Engine* eng)
 {
 	mEngine = eng;
@@ -337,13 +337,14 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	if (lvlHeader.Flipped)
 	{
 		mSize.x = lvlHeader.Rows;
-		mSize.y = sizeof(RowWidth) * 8;
+		mSize.y = lvlHeader.Cols;
 	}
 	else
 	{
 		mSize.y = lvlHeader.Rows;
-		mSize.x = sizeof(RowWidth) * 8;
+		mSize.x = lvlHeader.Cols;
 	}
+	mFlipped = lvlHeader.Flipped;
 	mScale = lvlHeader.Scale;
 	mBitmap = std::move(rows);
 	mBackground = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
@@ -351,14 +352,15 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
 	{
 		mPlayer.setPosition({
-			player.PosX * mScale,
-			player.PosY * mScale
+			player.PosX * mScale + mScale / 2,
+			player.PosY * mScale + mScale / 2
 		});
 		mPlayer.setRotation(
 			float(player.Dir) * 90
 		);
 
 		mPlayer.setProgram(Program::createProgramming(player.Programming));
+		mPlayer.initialize();
 	}
 
 	mFileData = std::move(fileData);
@@ -386,7 +388,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		}
 		else
 		{
-			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData);
+			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData, sizeof(it.ObjectData));
 
 			ent->setPosition(it.PosX * mScale, it.PosY * mScale);
 			ent->setRotation(float(it.Dir) * 90);
@@ -444,9 +446,13 @@ bool Level::saveToFile(const std::string& file) const
 	{
 		head.Flipped = true;
 		head.Rows = mSize.x;
+		head.Cols = mSize.y;
 	}
 	else
+	{
 		head.Rows = mSize.y;
+		head.Cols = mSize.x;
+	}
 
 	if (mFileData.size() > std::pow(2, 7))
 		return false;
@@ -482,7 +488,10 @@ bool Level::saveToFile(const std::string& file) const
 	auto pos = mPlayer.getPosition() / mScale;
 	player.PosX = uint8_t(pos.x);
 	player.PosY = uint8_t(pos.y);
-	player.Dir = uint8_t(mPlayer.getRotation() / Math::PI2) % 4;
+	float ang = mPlayer.getRotation();
+	while (ang < 0)
+		ang += 360;
+	player.Dir = uint8_t(ang / 90) % 4;
 
 	std::string name = mPlayer.getProgram()->getName();
 	std::copy_n(name.c_str(), name.size(), player.Programming);
@@ -500,7 +509,10 @@ bool Level::saveToFile(const std::string& file) const
 		auto pos = ent->getPosition() / mScale;
 		o.PosX = uint8_t(pos.x);
 		o.PosY = uint8_t(pos.y);
-		o.Dir =	uint8_t(ent->getRotation() / 90) % 4;
+		float ang = ent->getRotation();
+		while (ang < 360)
+			ang += 360;
+		o.Dir =	uint8_t(ang / 90) % 4;
 
 		o.Type = ent->isScriptEntity();
 		if (ent->isScriptEntity())
@@ -678,9 +690,35 @@ const Robot& Level::getPlayer() const
 	return mPlayer;
 }
 
+bool Level::findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y)
+{
+	if (isBlocked(x, y))
+		return false;
+
+	sf::Vector2f pos{
+		x * mScale + mScale / 2,
+		y * mScale + mScale / 2
+	};
+
+	bool found = false;
+	for (auto& it : mEntities)
+	{
+		auto& epos = it->getPosition();
+		if (Math::Length(epos - pos) < it->getRadius())
+		{
+			out.push_back(it);
+			found = true;
+		}
+	}
+
+	return found;
+}
+
 void Level::addEntity(Entity* ent)
 {
 	ent->setLevel(this);
+	ent->initialize();
+
 	mEntities.push_back(ent);
 }
 void Level::removeEntity(Entity* ent)

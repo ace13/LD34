@@ -1,12 +1,21 @@
 #include "Entity.hpp"
+#include "Goal.hpp"
 #include "Level.hpp"
 
 #include <Core/AS_Addons/scriptarray/scriptarray.h>
 #include <Core/ScriptManager.hpp>
 
-Entity* Entity::createFromType(const char* type, const char* data)
+Entity* Entity::createFromType(const char* type, const char* data, size_t len)
 {
-	return nullptr;
+	Entity* toRet = nullptr;
+
+	if (strcmp(type, "Goal") == 0)
+		toRet = new Goal();
+
+	if (toRet)
+		toRet->deserialize(data, len);
+
+	return toRet;
 }
 
 Entity* Entity::createForScript(asIScriptModule* module, const char* typeName)
@@ -217,6 +226,11 @@ bool Entity::deserialize(const char* data, size_t size)
 	return true;
 }
 
+void Entity::initialize()
+{
+
+}
+
 const std::string& Entity::getName() const
 {
 	static std::string defaultName = "Entity";
@@ -309,10 +323,7 @@ void Entity::setScriptObject(asIScriptObject* obj)
 
 int Entity::addRef()
 {
-	if (!mScript)
-		return 1;
-
-	if (!mScript->Get())
+	if (mScript && !mScript->Get())
 		mObject->AddRef();
 
 	return ++mRefCount;
@@ -320,10 +331,7 @@ int Entity::addRef()
 
 int Entity::release()
 {
-	if (!mScript)
-		return 1;
-
-	if (!mScript->Get())
+	if (mScript && !mScript->Get())
 		mObject->Release();
 
 	int refs = --mRefCount;

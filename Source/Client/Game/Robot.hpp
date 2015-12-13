@@ -2,6 +2,7 @@
 
 #include <Core/Time.hpp>
 
+#include <SFML/Audio/Sound.hpp>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -51,6 +52,8 @@ private:
 	Level* mLevel;
 	ParticleManager* mParticles;
 	State mState, mTargetState;
+
+	sf::Sound mPlayerSound;
 
 	float mRadius;
 
