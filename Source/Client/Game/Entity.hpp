@@ -25,6 +25,8 @@ public:
 	virtual void update(const Timespan& dt);
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
+	void move(const sf::Vector2f&);
+
 	virtual bool serialize(char* data, size_t size) const;
 	virtual bool deserialize(const char* data, size_t size);
 
@@ -38,6 +40,9 @@ public:
 
 	static void registerType(ScriptManager&);
 	static bool preLoadInject(asIScriptModule* mod);
+
+	float getRadius() const;
+	void setRadius(float);
 
 	const Level* getLevel() const;
 	Level* getLevel();
@@ -64,6 +69,7 @@ private:
 	asIScriptFunction *mTick, *mUpdate, *mDraw;
 
 	bool mIsGoal, mIsCompleted;
+	float mRadius;
 
 	int mRefCount;
 };

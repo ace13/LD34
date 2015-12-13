@@ -44,12 +44,13 @@ void GameState::enter(sf::RenderTarget* rt)
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
+	mLevel.loadFromFile("Test3");
+
 	for (auto& script : mScripts)
 	{
 		sman.loadFromFile(script);
 	}
 
-	mLevel.loadFromFile("Test2");
 	mLevel.getPlayer().passParticleManager(&mPreParticles);
 
 	mLevel.getPlayer().setPosition({

@@ -613,6 +613,9 @@ void Level::setSize(const sf::Vector2u& s)
 
 bool Level::isBlocked(uint8_t x, uint8_t y) const
 {
+	if (x > mSize.x || y > mSize.y)
+		return true;
+
 	if (mFlipped)
 		return (mBitmap[x] & (1 << y)) != 0;
 	return (mBitmap[y] & (1 << x)) != 0;

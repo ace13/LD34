@@ -63,9 +63,10 @@ Entity::Entity() :
 	mLevel(nullptr),
 	mScript(nullptr),
 	mObject(nullptr),
-	mRefCount(1),
 	mIsGoal(false),
-	mIsCompleted(false)
+	mIsCompleted(false),
+	mRadius(1),
+	mRefCount(1)
 {
 
 }
@@ -139,6 +140,13 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		ctx->Unprepare();
 		eng->ReturnContext(ctx);
 	}
+}
+
+void Entity::move(const sf::Vector2f& vec)
+{
+	auto checkPos = getPosition() + vec * mRadius;
+	if (!mLevel->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
+		sf::Transformable::move(vec);
 }
 
 bool Entity::serialize(char* data, size_t size) const
@@ -241,6 +249,15 @@ void Entity::setCompleted(bool completed)
 	mIsCompleted = completed;
 }
 
+float Entity::getRadius() const
+{
+	return mRadius;
+}
+void Entity::setRadius(float r)
+{
+	mRadius = r;
+}
+
 const Level* Entity::getLevel() const
 {
 	return mLevel;
@@ -331,40 +348,55 @@ namespace
 		"	void Update(const Timespan&in) { }\n"
 		"	void Draw(sf::Renderer@) { } \n"
 		"\n"
-		"	void Serialize(array<int8>@) { }\n"
-		"	void Deserialize(const array<int8>@) { }\n"
+		"	bool Serialize(array<int8>@) { return true; }\n"
+		"	bool Deserialize(const array<int8>@) { return true; }\n"
 		"\n"
+		"	float Radius {\n"
+		"		get const final { return mObj.Radius; }\n"
+		"		set final { mObj.Radius = value; }\n"
+		"	}\n"
 		"	bool Completed {\n"
-		"		get const { return mObj.Completed; }\n"
-		"		set { mObj.Completed = value; }\n"
+		"		get const final { return mObj.Completed; }\n"
+		"		set final { mObj.Completed = value; }\n"
 		"	}\n"
 		"	bool Goal {\n"
-		"		get const { return mObj.Goal; }\n"
-		"		set { mObj.Goal = value; }\n"
+		"		get const final { return mObj.Goal; }\n"
+		"		set final { mObj.Goal = value; }\n"
 		"	}\n"
 		"\n"
 		"	sf::Vec2 Origin {\n"
-		"		get const { return mObj.Origin; }\n"
-		"		set { mObj.Origin = value; }\n"
+		"		get const final { return mObj.Origin; }\n"
+		"		set final { mObj.Origin = value; }\n"
 		"	}\n"
 		"	sf::Vec2 Position {\n"
-		"		get const { return mObj.Position; }\n"
-		"		set { mObj.Position = value; }\n"
+		"		get const final { return mObj.Position; }\n"
+		"		set final { mObj.Position = value; }\n"
 		"	}\n"
 		"	sf::Vec2 Scale {\n"
-		"		get const { return mObj.Scale; }\n"
-		"		set { mObj.Scale = value; }\n"
+		"		get const final { return mObj.Scale; }\n"
+		"		set final { mObj.Scale = value; }\n"
 		"	}\n"
 		"	float Rotation {\n"
-		"		get const { return mObj.Rotation; }\n"
-		"		set { mObj.Rotation = value; }\n"
+		"		get const final { return mObj.Rotation; }\n"
+		"		set final { mObj.Rotation = value; }\n"
 		"	}\n"
 		"\n"
-		"	void Move(const sf::Vec2&in v) { mObj.Move(v); }\n"
-		"	void Scale(const sf::Vec2&in v) { mObj.Scale(v); }\n"
-		"	void Rotate(float r) { mObj.Rotate(r); }\n"
+		"	\n"
+		"	void Move(const sf::Vec2&in v) final { mObj.Move(v); }\n"
+		"	void Scale(const sf::Vec2&in v) final { mObj.Scale(v); }\n"
+		"	void Rotate(float r) final { mObj.Rotate(r); }\n"
+		"	bool IsBlocked(const sf::Vec2&in v) const final { return mObj.IsBlocked(v); }\n"
 		"}\n"
 		);
+}
+
+namespace
+{
+	bool checkBlock(Entity* ent, const sf::Vector2f& pos)
+	{
+		float scale = ent->getLevel()->getScale();
+		return ent->getLevel()->isBlocked(uint8_t(pos.x / scale), uint8_t(pos.y / scale));
+	}
 }
 
 void Entity::registerType(ScriptManager& man)
@@ -391,10 +423,14 @@ void Entity::registerType(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Scale(const sf::Vec2&in)", asMETHODPR(Entity, scale, (const sf::Vector2f&), void), asCALL_THISCALL));
 
 		// Entity
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "float get_Radius() const", asMETHOD(Entity, getRadius), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void set_Radius(float)", asMETHOD(Entity, setRadius), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool get_Completed() const", asMETHOD(Entity, isCompleted), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void set_Completed(bool=true)", asMETHOD(Entity, setCompleted), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool get_Goal() const", asMETHOD(Entity, isGoal), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void set_Goal(bool=true)", asMETHOD(Entity, setGoal), asCALL_THISCALL));
+
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool IsBlocked(const sf::Vec2&in) const", asFUNCTION(checkBlock), asCALL_CDECL_OBJFIRST));
 
 		auto* mod = eng->GetModule("ScriptEntity", asGM_ALWAYS_CREATE);
 		mod->AddScriptSection("ScriptEntity", ScriptEntityCode.c_str(), ScriptEntityCode.size());
