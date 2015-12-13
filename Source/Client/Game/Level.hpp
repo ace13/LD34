@@ -58,7 +58,7 @@ public:
 
 	bool hasFile(const std::string& file) const;
 	bool bakeFile(const std::string& file);
-	File&& getContained(const std::string& name) const;
+	File getContained(const std::string& name) const;
 
 	float getScale() const;
 	void setScale(float scale);

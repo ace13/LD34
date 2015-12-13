@@ -44,7 +44,7 @@ void GameState::enter(sf::RenderTarget* rt)
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
-	mLevel.loadFromFile("Test3");
+	mLevel.loadFromFile("Test4");
 
 	for (auto& script : mScripts)
 	{
@@ -52,12 +52,12 @@ void GameState::enter(sf::RenderTarget* rt)
 	}
 
 	mLevel.getPlayer().passParticleManager(&mPreParticles);
-
+	
+	/*
 	mLevel.getPlayer().setPosition({
 		200,200
 	});
 
-	/*
 	mLevel.getPlayer().setProgram(new BaseProgram());
 
 	mLevel.setSize({ 32, 32 });
@@ -77,9 +77,14 @@ void GameState::enter(sf::RenderTarget* rt)
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
 	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
 
-	mLevel.saveToFile("Test2");
+	auto* ent = Entity::createForScript(sman.getEngine()->GetModule("game\\robot.as"), "Robot");
+	ent->setPosition(500, 500);
+	mLevel.addEntity(ent);
+
+	mLevel.bakeFile("Game\\robot.as");
+
+	mLevel.saveToFile("Test4");
 	*/
-	
 }
 void GameState::exit(sf::RenderTarget*)
 {

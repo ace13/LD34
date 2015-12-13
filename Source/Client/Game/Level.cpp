@@ -44,7 +44,7 @@ namespace
 
 			float Scale;
 
-			char ScriptFile[24];
+			char ScriptFile[48];
 		};
 
 		struct PlayerObj
@@ -86,13 +86,13 @@ namespace
 
 		struct ContainedFile
 		{
-			char FileName[12];
+			char FileName[48];
 			uint16_t FileSize;
 		};
 	};
 #pragma pack(pop)
 
-	static const OnDisk::Version FILE_VERSION = 2;
+	static const OnDisk::Version FILE_VERSION = 3;
 }
 
 Level::File::File(const char* data, size_t size) :
@@ -113,7 +113,9 @@ Level::File::operator bool() const
 int64_t Level::File::read(void* data, int64_t size)
 {
 	size_t toRead = std::max(std::min(mSize - mGetP, size_t(size)), size_t(0));
-	std::copy(mData + mGetP, mData + mGetP + toRead, (char*)data);
+
+	const char* dataP = mData + mGetP;
+	std::copy(dataP, dataP + toRead, (char*)data);
 
 	mGetP += toRead;
 
@@ -186,7 +188,7 @@ void Level::drawBackface(sf::RenderTarget& rt)
 		mBackground
 	});
 
-	for (int i = 0; i < mBitmap.size(); ++i)
+	for (int i = 0; i < int(mBitmap.size()); ++i)
 	{
 		for (int j = 0; j < maxWidth; ++j)
 		{
@@ -269,8 +271,7 @@ bool Level::loadFromFile(const std::string& file)
 	ifs.seekg(0, std::ios::beg);
 
 	std::vector<char> data(len);
-	if (!ifs.read(&data[0], len))
-		return false;
+	ifs.read(&data[0], len);
 
 	return loadFromMemory(&data[0], len);
 }
@@ -293,13 +294,14 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	OnDisk::Header lvlHeader = {};
 	reader.read(&lvlHeader, sizeof(OnDisk::Header));
 
-	size_t minSize = 
+	size_t minSize = size_t(
 		sizeof(OnDisk::Version) +
 		sizeof(OnDisk::Header) +
 		sizeof(OnDisk::PlayerObj) +
 		(lvlHeader.Rows * sizeof(OnDisk::Row)) +
 		(lvlHeader.ObjCount * sizeof(OnDisk::ObjDef)) +
-		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile));
+		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile))
+	);
 
 	if (len < minSize)
 		return false;
@@ -344,16 +346,16 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	}
 	mScale = lvlHeader.Scale;
 	mBitmap = std::move(rows);
-	mBackground = sf::Color(lvlHeader.OutsideColor << 8 | 0xff);
-	mBackground = sf::Color(lvlHeader.BackgroundColor << 8 | 0xff);
-	mForeground = sf::Color(lvlHeader.ForegroundColor << 8 | 0xff);
+	mBackground = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
+	mBackground = sf::Color(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
+	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
 	{
 		mPlayer.setPosition({
 			player.PosX * mScale,
 			player.PosY * mScale
 		});
 		mPlayer.setRotation(
-			player.Dir * 90
+			float(player.Dir) * 90
 		);
 
 		mPlayer.setProgram(Program::createProgramming(player.Programming));
@@ -564,8 +566,12 @@ bool Level::bakeFile(const std::string& file)
 	ifs.seekg(0, std::ios::beg);
 
 	std::vector<char> data(len);
-	if (!ifs.read(&data[0], len))
-		return false;
+	ifs.read(&data[0], len);
+
+	// Remove extraneous nullbytes
+	auto it = std::remove(data.begin(), data.end(), '\0');
+	if (it != data.end())
+		data.erase(it, data.end());
 
 	std::string lower;
 	std::transform(file.begin(), file.end(), std::back_inserter(lower), ::tolower);
@@ -575,15 +581,15 @@ bool Level::bakeFile(const std::string& file)
 	return true;
 }
 
-Level::File&& Level::getContained(const std::string& name) const
+Level::File Level::getContained(const std::string& name) const
 {
 	std::string lower;
 	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
 
 	if (mFileData.count(name) > 0)
-		return std::move(File(&mFileData.at(name)[0], mFileData.at(name).size()));
+		return File(&mFileData.at(name)[0], mFileData.at(name).size());
 
-	return std::move(File(nullptr, 0));
+	return File(nullptr, 0);
 }
 
 float Level::getScale() const
