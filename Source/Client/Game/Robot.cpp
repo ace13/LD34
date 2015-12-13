@@ -38,8 +38,8 @@ Robot::~Robot()
 void Robot::tick(const Timespan& span)
 {
 	const float MoveSpeed = 150;
-	const float AccelerationSpeed = 2;
-	const float RotationSpeed = 2;
+	const float AccelerationSpeed = 4;
+	const float RotationSpeed = 4;
 
 	float dt = Time::Seconds(span);
 

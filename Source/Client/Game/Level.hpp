@@ -68,6 +68,8 @@ public:
 	bool isBlocked(uint8_t x, uint8_t y) const;
 	void setBlocked(uint8_t x, uint8_t y, bool blocked = true);
 
+	const sf::Color& getOutsideColor() const;
+	void setOutsideColor(const sf::Color&);
 	const sf::Color& getBackgroundColor() const;
 	void setBackgroundColor(const sf::Color&);
 	const sf::Color& getForegroundColor() const;
@@ -95,7 +97,7 @@ private:
 	bool mFlipped;
 	sf::Vector2u mSize;
 	std::vector<RowWidth> mBitmap;
-	sf::Color mBackground, mForeground;
+	sf::Color mBackground, mForeground, mOutside;
 	Robot mPlayer;
 	
 	std::list<Entity*> mEntities;

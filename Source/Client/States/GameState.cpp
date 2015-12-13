@@ -49,26 +49,31 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	mLevel.loadFromFile("Test");
-
+	mLevel.loadFromFile("Test2");
+	/*
 	mLevel.getPlayer().passParticleManager(&mPreParticles);
 	mLevel.getPlayer().setProgram(new BaseProgram());
 
-	mLevel.setSize({ 10, 10 });
-	for (int x = 0; x < 10; ++x)
+	mLevel.setSize({ 32, 32 });
+	for (int x = 0; x < 32; ++x)
 	{
-		for (int y = 0; y < 10; ++y)
+		for (int y = 0; y < 32; ++y)
 		{
-			if ((x > 0 && x < 9) && (y != 0 && y != 9))
+			if ((x > 0 && x < 31) && (y != 0 && y != 31))
 				continue;
 
 			mLevel.setBlocked(x, y);
 		}
 	}
 
-	mLevel.setScale(100);
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color::Black);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
 	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
+
+	mLevel.saveToFile("Test2");
+	*/
+	
 }
 void GameState::exit(sf::RenderTarget*)
 {
@@ -154,7 +159,7 @@ void GameState::draw(sf::RenderTarget& target)
 	view.move((mLevel.getPlayer().getPosition() - view.getCenter()) * 0.001f);
 
 	target.setView(view);
-	target.clear(mLevel.getBackgroundColor());
+	target.clear(mLevel.getOutsideColor());
 
 	mPreParticles.draw(target);
 

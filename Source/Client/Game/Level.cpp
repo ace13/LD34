@@ -39,6 +39,9 @@ namespace
 			uint64_t ForegroundColor : 24;
 			uint64_t Unused2 : 2;
 
+			uint32_t OutsideColor : 24;
+			uint32_t Unused3 : 16;
+
 			float Scale;
 
 			char ScriptFile[24];
@@ -89,7 +92,7 @@ namespace
 	};
 #pragma pack(pop)
 
-	static const OnDisk::Version FILE_VERSION = 1;
+	static const OnDisk::Version FILE_VERSION = 2;
 }
 
 Level::File::File(const char* data, size_t size) :
@@ -161,9 +164,28 @@ void Level::update(const Timespan& dt)
 }
 void Level::draw(sf::RenderTarget& rt)
 {
-	sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4);
+	sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4 + 4);
 
 	int maxWidth = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.y : mSize.x));
+	int maxHeight = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.x : mSize.y));
+
+	foreground.append({
+		{ 0, 0 },
+		mBackground
+	});
+	foreground.append({
+		{ maxWidth * mScale, 0 },
+		mBackground
+	});
+	foreground.append({
+		{ maxWidth * mScale, maxHeight * mScale },
+		mBackground
+	});
+	foreground.append({
+		{ 0, maxHeight * mScale },
+		mBackground
+	});
+
 	for (int i = 0; i < mBitmap.size(); ++i)
 	{
 		for (int j = 0; j < maxWidth; ++j)
@@ -318,8 +340,9 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	}
 	mScale = lvlHeader.Scale;
 	mBitmap = std::move(rows);
-	mBackground = sf::Color(lvlHeader.BackgroundColor);
-	mForeground = sf::Color(lvlHeader.ForegroundColor);
+	mBackground = sf::Color(lvlHeader.OutsideColor << 8 | 0xff);
+	mBackground = sf::Color(lvlHeader.BackgroundColor << 8 | 0xff);
+	mForeground = sf::Color(lvlHeader.ForegroundColor << 8 | 0xff);
 	{
 		mPlayer.setPosition({
 			player.PosX * mScale,
@@ -424,8 +447,9 @@ bool Level::saveToFile(const std::string& file) const
 
 	head.Scale = mScale;
 	head.ContainedFiles = mFileData.size();
-	head.BackgroundColor = mBackground.toInteger();
-	head.ForegroundColor = mForeground.toInteger();
+	head.OutsideColor = mOutside.toInteger() >> 8;
+	head.BackgroundColor = mBackground.toInteger() >> 8;
+	head.ForegroundColor = mForeground.toInteger() >> 8;
 	head.ObjCount = mEntities.size();
 
 	if (mScriptModule)
@@ -607,6 +631,14 @@ void Level::setBlocked(uint8_t x, uint8_t y, bool blocked)
 	}
 }
 
+const sf::Color& Level::getOutsideColor() const
+{
+	return mOutside;
+}
+void Level::setOutsideColor(const sf::Color& col)
+{
+	mOutside = col;
+}
 const sf::Color& Level::getBackgroundColor() const
 {
 	return mBackground;
