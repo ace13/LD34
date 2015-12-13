@@ -13,6 +13,7 @@ class asIScriptModule;
 class asIScriptObject;
 class asIScriptFunction;
 class ScriptManager;
+class ParticleManager;
 class Level;
 
 class Entity : public sf::Transformable, public sf::Drawable
@@ -45,6 +46,9 @@ public:
 
 	float getRadius() const;
 	void setRadius(float);
+
+	const ParticleManager* getParticleManager() const;
+	ParticleManager* getParticleManager();
 
 	const Level* getLevel() const;
 	Level* getLevel();

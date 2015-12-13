@@ -31,6 +31,8 @@ public:
 		T* get();
 		explicit operator T*();
 
+		operator bool();
+
 		T& operator*();
 		const T& operator*() const;
 		T* operator->();

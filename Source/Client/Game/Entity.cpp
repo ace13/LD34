@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+#include "Enemy.hpp"
 #include "Goal.hpp"
 #include "Level.hpp"
 
@@ -11,6 +12,8 @@ Entity* Entity::createFromType(const char* type, const char* data, size_t len)
 
 	if (strcmp(type, "Goal") == 0)
 		toRet = new Goal();
+	else if (strcmp(type, "BasicEnemy") == 0)
+		toRet = new Enemy();
 
 	if (toRet)
 		toRet->deserialize(data, len);
@@ -270,6 +273,15 @@ float Entity::getRadius() const
 void Entity::setRadius(float r)
 {
 	mRadius = r;
+}
+
+const ParticleManager* Entity::getParticleManager() const
+{
+	return mLevel->getParticleManager();
+}
+ParticleManager* Entity::getParticleManager()
+{
+	return mLevel->getParticleManager();
 }
 
 const Level* Entity::getLevel() const

@@ -62,8 +62,13 @@ BaseProgram::BaseProgram() : Program("BaseProgramming")
 {
 	addOpcode("0", "STOP", [](Robot& r) { r.setSpeed(0); });
 	addOpcode("1", "FULL_FORWARD", [](Robot& r) { r.setSpeed(1); });
+
 	addOpcode("00", "SLOW_FORWARD", [](Robot& r) { r.setSpeed(0.5); });
-	addOpcode("01", "TURN_LEFT", [](Robot& r) { r.turn(Math::PI / -2); });
-	addOpcode("10", "TURN_RIGHT", [](Robot& r) { r.turn(Math::PI / 2); });
+	addOpcode("01", "TURN_LEFT", [](Robot& r) { r.turn(-Math::PI2); });
+	addOpcode("10", "TURN_RIGHT", [](Robot& r) { r.turn(Math::PI2); });
 	addOpcode("11", "BACK_THAT_ASS_UP", [](Robot& r) { r.setSpeed(-0.5); });
+
+	addOpcode("011", "TURN_AROUND", [](Robot& r) { r.turn(Math::PI); });
+
+	addOpcode("1011", "MOONWALK", [](Robot& r) { r.turn(Math::PI * 2); r.setSpeed(-1); });
 }

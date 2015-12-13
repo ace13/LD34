@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../ResourceManager.hpp"
+
 #include <Core/Time.hpp>
 
 #include <SFML/Audio/Sound.hpp>
@@ -53,6 +55,7 @@ private:
 	ParticleManager* mParticles;
 	State mState, mTargetState;
 
+	ResourceManager::Sound mExplodeSound;
 	sf::Sound mPlayerSound;
 
 	float mRadius;

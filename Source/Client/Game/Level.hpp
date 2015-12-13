@@ -53,7 +53,12 @@ public:
 	const Engine* getEngine() const;
 	void setEngine(Engine*);
 
+	const std::string& getName() const;
+	void setName(const std::string&);
+
 	void clearLevel();
+	void resetLevel();
+
 	bool loadFromFile(const std::string& file);
 	bool loadFromMemory(const void* data, size_t len);
 	bool loadFromStream(sf::InputStream& file);
@@ -93,6 +98,10 @@ public:
 	int getNumberOfGoals() const;
 	int getNumberOfCompletedGoals() const;
 
+	const ParticleManager* getParticleManager() const;
+	ParticleManager* getParticleManager();
+	void setParticleManager(ParticleManager*);
+
 	const asIScriptModule* getScriptModule() const;
 	void setScriptModule(asIScriptModule* mod);
 
@@ -100,6 +109,8 @@ private:
 	typedef uint32_t RowWidth;
 
 	Engine* mEngine;
+	ParticleManager* mParticles;
+	std::string mLoaded;
 
 	float mScale;
 	bool mFlipped;

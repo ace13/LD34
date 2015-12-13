@@ -35,6 +35,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	rt->setView(tmp);
 
 	mLevel.setEngine(&getEngine());
+	mLevel.setParticleManager(&mPreParticles);
 
 	mTick = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
 	mTickFail = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-fail.wav");
@@ -54,8 +55,139 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	loadLevel("Tutorial1.lvl");
+	loadLevel("Level1.lvl");
 
+#define B(x,y) mLevel.setBlocked(x,y)
+#define U(x,y) do {Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0); \
+ent->setPosition(x*150+75, y*150+75); \
+ent->setRotation(-90); \
+mLevel.addEntity(ent); } while(false);
+#define G(x,y) do {Entity* ent = Entity::createFromType("Goal", nullptr, 0); \
+ent->setPosition(x*150+75, y*150+75); \
+mLevel.addEntity(ent); } while(false);
+#define P(x,y) mLevel.getPlayer().setPosition(x*150+75, y*150+75);
+	
+	// Level1.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		15,
+		9
+	});
+
+	std::string level =
+		"###############"
+		"##  ####   # ##"
+		"# P ###### # ##"
+		"### #G ###  UG#"
+		"### ## ##  # ##"
+		"###        # ##"
+		"#####    ######"
+		"######    G ###"
+		"###############";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(-90);
+	mLevel.getPlayer().initialize();
+
+	mLevel.saveToFile("Level1.lvl");
+	*/
+
+	// Tutorial4.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color::Black);
+	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
+	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		9,
+		9
+	});
+
+	B(0, 0); B(1, 0); B(2, 0); B(3, 0); B(4, 0); B(5, 0); B(6, 0); B(7, 0); B(8, 0);
+	B(0, 1); P(1, 1); B(2, 1); B(3, 1); G(4, 1);                            B(8, 1);
+	B(0, 2);          B(2, 2);                            B(6, 2);          B(8, 2);
+	B(0, 3);                            B(4, 3);          B(6, 3); G(7, 3); B(8, 3);
+	B(0, 4); B(1, 4);          B(3, 4); B(4, 4);          B(6, 4); B(7, 4); B(8, 4);
+	B(0, 5);                   B(3, 5); G(4, 5);                            B(8, 5);
+	B(0, 6); G(1, 6); B(2, 6); B(3, 6); B(4, 6); B(5, 6); B(6, 6); G(7, 6); B(8, 6);
+	B(0, 7);                            G(4, 7); B(5, 7); G(6, 7);          B(8, 7);
+	B(0, 8); B(1, 8); B(2, 8); B(3, 8); B(4, 8); B(5, 8); B(6, 8); B(7, 8); B(8, 8);
+
+	mLevel.getPlayer().setRotation(90);
+	mLevel.getPlayer().initialize();
+
+	mLevel.bakeFile("level\\tutorial4.as");
+
+	mLevel.saveToFile("Tutorial4.lvl");
+	*/
+
+	// Tutorial3.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color::Black);
+	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
+	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		7,
+		7
+	});
+
+	B(0, 0); B(1, 0); B(2, 0); B(3, 0); B(4, 0); B(5, 0); B(6, 0);
+	B(0, 1); G(1, 1); B(2, 1); B(3, 1); B(4, 1); B(5, 1); B(6, 1);
+	B(0, 2);          B(2, 2);                            B(6, 2);
+	B(0, 3);                            B(4, 3);          B(6, 3);
+	B(0, 4); B(1, 4);          B(3, 4); B(4, 4);          B(6, 4);
+	B(0, 5);                   B(3, 5); P(4, 5);          B(6, 5);
+	B(0, 6); B(1, 6); B(2, 6); B(3, 6); B(4, 6); B(5, 6); B(6, 6);
+
+	mLevel.getPlayer().setRotation(0);
+	mLevel.getPlayer().initialize();
+
+	mLevel.bakeFile("level\\tutorial3.as");
+
+	mLevel.saveToFile("Tutorial3.lvl");
+	*/
+
+#undef B
+#undef G
+#undef P
+
+	// Tutorial2.lvl
 	/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color::Black);
@@ -382,4 +514,7 @@ void GameState::loadLevel(const std::string& name)
 			if (file.substr(file.size() - 3) == ".as")
 				getEngine().get<ScriptManager>().loadFromStream(file, mLevel.getContained(file));
 		}
+
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
 }

@@ -96,6 +96,12 @@ namespace
 	static const OnDisk::Version FILE_VERSION = 4;
 }
 
+namespace
+{
+	OnDisk::PlayerObj lastLoadedPlayer;
+	std::vector<OnDisk::ObjDef> lastLoadedObjects;
+}
+
 Level::File::File(const char* data, size_t size) :
 	mData(data), mGetP(0), mSize(size)
 {
@@ -243,8 +249,19 @@ void Level::setEngine(Engine* eng)
 	mEngine = eng;
 }
 
+const std::string& Level::getName() const
+{
+	return mLoaded;
+}
+void Level::setName(const std::string& name)
+{
+	mLoaded = name;
+}
+
 void Level::clearLevel()
 {
+	mLoaded.clear();
+
 	mScale = 1;
 	mSize = {};
 	mBitmap.clear();
@@ -253,6 +270,7 @@ void Level::clearLevel()
 	mForeground = sf::Color::Black;
 	mPlayer = {};
 	mPlayer.setLevel(this);
+	mPlayer.passParticleManager(mParticles);
 
 	for (auto& it : mEntities)
 		it->release();
@@ -263,6 +281,60 @@ void Level::clearLevel()
 	mScriptModule = nullptr;
 
 	mFileData.clear();
+}
+
+void Level::resetLevel()
+{
+	mPlayer = {};
+	mPlayer.setLevel(this);
+	mPlayer.passParticleManager(mParticles);
+
+	mPlayer.setPosition({
+		lastLoadedPlayer.PosX * mScale + mScale / 2,
+		lastLoadedPlayer.PosY * mScale + mScale / 2
+	});
+	mPlayer.setRotation(
+		float(lastLoadedPlayer.Dir) * 90
+		);
+
+	mPlayer.setProgram(Program::createProgramming(lastLoadedPlayer.Programming));
+	mPlayer.initialize();
+
+	for (auto& it : mEntities)
+		it->release();
+	mEntities.clear();
+
+	auto& sman = mEngine->get<ScriptManager>();
+	for (auto& it : lastLoadedObjects)
+	{
+		if (it.Type == OnDisk::ObjDef::Type_Script)
+		{
+			if (!sman.hasLoaded(it.Script.ScriptFile))
+			{
+				if (hasFile(it.Script.ScriptFile))
+					sman.loadFromStream(it.Script.ScriptFile, getContained(it.Script.ScriptFile));
+				else
+					sman.loadFromFile(it.Script.ScriptFile);
+			}
+
+			auto* ent = Entity::createForScript(sman.getEngine()->GetModule(it.Script.ScriptFile), it.Script.ScriptObject);
+			ent->deserialize(it.ObjectData, sizeof(it.ObjectData));
+
+			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
+			ent->setRotation(float(it.Dir) * 90);
+
+			addEntity(ent);
+		}
+		else
+		{
+			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData, sizeof(it.ObjectData));
+
+			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
+			ent->setRotation(float(it.Dir) * 90);
+
+			addEntity(ent);
+		}
+	}
 }
 
 bool Level::loadFromFile(const std::string& file)
@@ -278,7 +350,12 @@ bool Level::loadFromFile(const std::string& file)
 	std::vector<char> data(len);
 	ifs.read(&data[0], len);
 
-	return loadFromMemory(&data[0], len);
+	if (loadFromMemory(&data[0], len))
+	{
+		mLoaded = file;
+		return true;
+	}
+	return false;
 }
 bool Level::loadFromMemory(const void* data, size_t len)
 {
@@ -352,7 +429,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	mFlipped = lvlHeader.Flipped;
 	mScale = lvlHeader.Scale;
 	mBitmap = std::move(rows);
-	mBackground = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
+	mOutside = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
 	mBackground = sf::Color(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
 	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
 	{
@@ -427,6 +504,8 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		}
 	}
 
+	lastLoadedObjects = std::move(objs);
+	lastLoadedPlayer = std::move(player);
 
 	return true;
 }
@@ -509,7 +588,7 @@ bool Level::saveToFile(const std::string& file) const
 	int i = 0;
 	for (auto& ent : mEntities)
 	{
-		auto& o = objs[i];
+		auto& o = objs[i++];
 		
 		auto pos = ent->getPosition() / mScale;
 		o.PosX = uint8_t(pos.x);
@@ -769,6 +848,19 @@ int Level::getNumberOfCompletedGoals() const
 			++num;
 	}
 	return num;
+}
+
+const ParticleManager* Level::getParticleManager() const
+{
+	return mParticles;
+}
+ParticleManager* Level::getParticleManager()
+{
+	return mParticles;
+}
+void Level::setParticleManager(ParticleManager* p)
+{
+	mParticles = p;
 }
 
 const asIScriptModule* Level::getScriptModule() const

@@ -2,11 +2,14 @@
 #include "Program.hpp"
 #include "Level.hpp"
 #include "Goal.hpp"
+#include "Enemy.hpp"
 
 #include "../ParticleManager.hpp"
 
+#include <Core/Engine.hpp>
 #include <Core/Math.hpp>
 
+#include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 
@@ -52,7 +55,7 @@ void Robot::tick(const Timespan& span)
 	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * mLevel->getScale() * dt;
 
 	auto checkPos = getPosition() + newPos * mRadius;
-	if (!mLevel->isBlocked(checkPos.x / mLevel->getScale(), checkPos.y / mLevel->getScale()))
+	if (!mLevel->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
 	{
 		move(newPos);
 
@@ -61,13 +64,26 @@ void Robot::tick(const Timespan& span)
 		if (mLevel->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
 			for (auto& it : standingOn)
 			{
-				Goal* test = dynamic_cast<Goal*>(it);
-				if (test && !test->isCompleted())
+				if (it->getName() == "Goal")
 				{
-					test->setCompleted();
+					Goal* test = dynamic_cast<Goal*>(it);
+					if (!test->isCompleted())
+					{
+						test->setCompleted();
 
-					mPlayerSound.setBuffer(*test->getSound());
+						mPlayerSound.setBuffer(*test->getSound());
+						mPlayerSound.play();
+					}
+				}
+				else if (it->getName() == "BasicEnemy")
+				{
+					Enemy* test = (Enemy*)it;
+
+					mPlayerSound.setBuffer(*mExplodeSound);
 					mPlayerSound.play();
+
+					getLevel()->resetLevel();
+					return;
 				}
 			}
 	}
@@ -173,4 +189,7 @@ void Robot::initialize()
 	mTargetState.Speed = 0;
 	mTargetState.Angle = getRotation() * Math::DEG2RAD;
 	mState = mTargetState;
+
+	if (!mExplodeSound)
+		mExplodeSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
 }
