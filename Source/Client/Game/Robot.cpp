@@ -1,5 +1,6 @@
 #include "Robot.hpp"
 #include "Program.hpp"
+#include "Level.hpp"
 
 #include "../ParticleManager.hpp"
 
@@ -22,10 +23,12 @@ namespace
 
 Robot::Robot() : 
 	mTick(0),
+	mLevel(nullptr),
 	mParticles(nullptr),
 	mCurProgram(nullptr),
 	mState { },
-	mTargetState { }
+	mTargetState { },
+	mRadius(10)
 {
 
 }
@@ -37,7 +40,6 @@ Robot::~Robot()
 
 void Robot::tick(const Timespan& span)
 {
-	const float MoveSpeed = 150;
 	const float AccelerationSpeed = 4;
 	const float RotationSpeed = 4;
 
@@ -46,7 +48,17 @@ void Robot::tick(const Timespan& span)
 	mState.Angle += (mTargetState.Angle - mState.Angle) * dt * RotationSpeed;
 	mState.Speed += (mTargetState.Speed - mState.Speed) * dt * AccelerationSpeed;
 
-	move(sf::Vector2f(cos(mState.Angle) * mState.Speed, sin(mState.Angle) * mState.Speed) * MoveSpeed * dt);
+	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * mLevel->getScale() * dt;
+
+	auto checkPos = getPosition() + newPos * mRadius;
+	if (!mLevel->isBlocked(checkPos.x / mLevel->getScale(), checkPos.y / mLevel->getScale()))
+		move(newPos);
+	else
+	{
+		mTargetState.Speed = 0;
+		mState.Speed = -0.5;
+	}
+
 	setRotation(mState.Angle * Math::RAD2DEG);
 
 	if (mParticles && (mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
@@ -84,6 +96,20 @@ bool Robot::execute(const std::string& command)
 	return false;
 }
 
+
+const Level* Robot::getLevel() const
+{
+	return mLevel;
+}
+Level* Robot::getLevel()
+{
+	return mLevel;
+}
+void Robot::setLevel(Level* level)
+{
+	mLevel = level;
+}
+
 void Robot::passParticleManager(ParticleManager* pman)
 {
 	mParticles = pman;
@@ -100,6 +126,15 @@ void Robot::setProgram(Program* prog)
 		delete mCurProgram;
 
 	mCurProgram = prog;
+}
+
+float Robot::getRadius() const
+{
+	return mRadius;
+}
+void Robot::setRadius(float r)
+{
+	mRadius = r;
 }
 
 void Robot::setSpeed(float speed)

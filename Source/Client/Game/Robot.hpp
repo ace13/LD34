@@ -10,6 +10,7 @@
 
 class ParticleManager;
 class Program;
+class Level;
 
 class Robot : public sf::Transformable, public sf::Drawable
 {
@@ -24,8 +25,15 @@ public:
 	
 	void passParticleManager(ParticleManager*);
 
+	const Level* getLevel() const;
+	Level* getLevel();
+	void setLevel(Level*);
+
 	const Program* getProgram() const;
 	void setProgram(Program* prog);
+
+	float getRadius() const;
+	void setRadius(float);
 
 	void setSpeed(float speed);
 	void turn(float amount);
@@ -40,8 +48,11 @@ private:
 	};
 
 	int mTick;
+	Level* mLevel;
 	ParticleManager* mParticles;
 	State mState, mTargetState;
+
+	float mRadius;
 
 	Program* mCurProgram;
 };

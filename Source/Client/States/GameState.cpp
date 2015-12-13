@@ -50,6 +50,11 @@ void GameState::enter(sf::RenderTarget* rt)
 	}
 
 	mLevel.loadFromFile("Test2");
+
+	mLevel.getPlayer().setPosition({
+		200,200
+	});
+
 	/*
 	mLevel.getPlayer().passParticleManager(&mPreParticles);
 	mLevel.getPlayer().setProgram(new BaseProgram());
