@@ -3,7 +3,31 @@
 
 #include <Core/ScriptManager.hpp>
 
-GameState* Entity::CurGameState = nullptr;
+Entity* Entity::createForScript(asIScriptModule* module, const char* typeName)
+{
+	asIObjectType* type;
+	if (!module || !(type = module->GetObjectTypeByName(typeName)))
+	{
+		return nullptr;
+	}
+
+	auto* eng = module->GetEngine();
+	auto* func = type->GetFactoryByDecl((std::string(typeName) + " @" + typeName + "()").c_str());
+	auto* ctx = eng->RequestContext();
+	ctx->Prepare(func);
+	ctx->SetUserData((void*)0x01, 0x1EC7);
+
+	ctx->Execute();
+
+	auto* obj = *(asIScriptObject**)ctx->GetAddressOfReturnValue();
+
+	ctx->Unprepare();
+	eng->ReturnContext(ctx);
+
+	auto created = *reinterpret_cast<Entity**>(obj->GetAddressOfProperty(0));
+
+	return created;
+}
 
 Entity* Entity::createFromScript()
 {
@@ -23,7 +47,8 @@ Entity* Entity::createFromScript()
 		toRet->setScriptObject(newObj);
 	});
 
-	CurGameState->injectEntity(toRet);
+	if (ctx->GetUserData(0x1EC7) != (void*)0x01)
+		((GameState*)ctx->GetEngine()->GetUserData(0x64EE))->injectEntity(toRet);
 
 	return toRet;
 }
@@ -31,7 +56,9 @@ Entity* Entity::createFromScript()
 Entity::Entity() :
 	mScript(nullptr),
 	mObject(nullptr),
-	mRefCount(1)
+	mRefCount(1),
+	mIsGoal(false),
+	mIsCompleted(false)
 {
 
 }
@@ -106,6 +133,24 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
+bool Entity::isGoal() const
+{
+	return mIsGoal;
+}
+bool Entity::isCompleted() const
+{
+	return mIsCompleted;
+}
+
+void Entity::setGoal(bool isGoal)
+{
+	mIsGoal = isGoal;
+}
+void Entity::setCompleted(bool completed)
+{
+	mIsCompleted = completed;
+}
+
 void Entity::setScriptObject(asIScriptObject* obj)
 {
 	if (mScript)
@@ -176,6 +221,15 @@ namespace
 		"	void Update(const Timespan&in) { }\n"
 		"	void Draw(sf::Renderer@) { } \n"
 		"\n"
+		"	bool Completed {\n"
+		"		get const { return mObj.Completed; }\n"
+		"		set { mObj.Completed = value; }\n"
+		"	}\n"
+		"	bool Goal {\n"
+		"		get const { return mObj.Goal; }\n"
+		"		set { mObj.Goal = value; }\n"
+		"	}\n"
+		"\n"
 		"	sf::Vec2 Origin {\n"
 		"		get const { return mObj.Origin; }\n"
 		"		set { mObj.Origin = value; }\n"
@@ -222,6 +276,12 @@ void Entity::registerType(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Move(const sf::Vec2&in)", asMETHODPR(Entity, move, (const sf::Vector2f&), void), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Rotate(float)", asMETHODPR(Entity, rotate, (float), void), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Scale(const sf::Vec2&in)", asMETHODPR(Entity, scale, (const sf::Vector2f&), void), asCALL_THISCALL));
+
+		// Entity
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool get_Completed() const", asMETHOD(Entity, isCompleted), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void set_Completed(bool=true)", asMETHOD(Entity, setCompleted), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool get_Goal() const", asMETHOD(Entity, isGoal), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void set_Goal(bool=true)", asMETHOD(Entity, setGoal), asCALL_THISCALL));
 
 		auto* mod = eng->GetModule("ScriptEntity", asGM_ALWAYS_CREATE);
 		mod->AddScriptSection("ScriptEntity", ScriptEntityCode.c_str(), ScriptEntityCode.size());

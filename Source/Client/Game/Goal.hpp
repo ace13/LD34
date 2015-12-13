@@ -8,8 +8,11 @@ public:
 	Goal();
 	~Goal();
 	
+	void tick(const Timespan& dt);
+	void update(const Timespan& dt);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-private:
+	void setCompleted(bool completed = true);
 
+private:
 };

@@ -33,24 +33,31 @@ void GameState::enter(sf::RenderTarget* rt)
 
 	mRobot.passParticleManager(&mPreParticles);
 
-	mTickResource = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
-	mTick.setBuffer(*mTickResource);
+	mTick = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
+	mTickFail = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-fail.wav");
+	mTickSucceed = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-success.wav");
 
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
 	sman.setPreLoadCallback(Entity::preLoadInject);
-	Entity::CurGameState = this;
+	sman.getEngine()->SetUserData(this, 0x64EE);
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
 
 	for (auto& script : mScripts)
+	{
 		sman.loadFromFile(script);
-
+	}
 }
 void GameState::exit(sf::RenderTarget*)
 {
+	for (auto& ent : mEntities)
+		ent->release();
+
+	mEntities.clear();
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.clearPreLoadCallback();
+	sman.getEngine()->SetUserData(nullptr, 0x64EE);
 	
 	for (auto& script : mScripts)
 		sman.unload(script);
@@ -79,12 +86,25 @@ void GameState::tick(const Timespan& dt)
 
 			if (!mCurCommand.empty())
 				getEngine().get<ScriptManager>().runHook<const std::string*, const std::string*>("OnCommand", &mCurCommand, &name);
-			mTick.setVolume(50);
+			
+			if (name != "NOP")
+			{
+				mTickSound.setBuffer(*mTickSucceed);
+				mTickSound.setVolume(25);
+			}
+			else
+			{
+				mTickSound.setBuffer(*mTickFail);
+				mTickSound.setVolume(50);
+			}
 		}
 		else
-			mTick.setVolume(20);
+		{
+			mTickSound.setBuffer(*mTick);
+			mTickSound.setVolume(20);
+		}
 
-		mTick.play();
+		mTickSound.play();
 
 		mCurCommand.clear();
 

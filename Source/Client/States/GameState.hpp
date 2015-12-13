@@ -36,8 +36,8 @@ private:
 
 	float mDot, mDir, mOff;
 
-	sf::Sound mTick;
-	ResourceManager::Sound mTickResource;
+	sf::Sound mTickSound;
+	ResourceManager::Sound mTick, mTickFail, mTickSucceed;
 
 	Timestamp mNextExec;
 	Robot mRobot;

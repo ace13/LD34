@@ -54,27 +54,35 @@ private:
 			uint64_t BackgroundColor : 24;
 
 			char ScriptFile[24];
-			char ScriptObject[12];
 		};
 
-		struct PlayerData
+		struct PlayerObj
 		{
 			uint64_t PosX : 8;
 			uint64_t PosY : 8;
 			uint64_t Dir : 2;
-
-			// MORE DATA IS NEEDED
 		};
 
 		struct ObjDef
 		{
-			uint64_t PosX : 8;
-			uint64_t Posy : 8;
+			uint8_t Type : 1;
 
-			char ScriptFile[24];
-			char ScriptObject[16];
+			union
+			{
+				struct DefObjDef
+				{
+					uint32_t PosX : 8;
+					uint32_t PosY : 8;
+					uint32_t Dir : 2;
 
-			// The market for data has crashed 
+					char ObjType[16];
+				};
+				struct ScriptObjDef
+				{
+					char ScriptFile[48];
+					char ScriptObject[24];
+				};
+			};
 		};
 
 		struct ContainedFile
