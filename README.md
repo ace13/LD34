@@ -18,6 +18,7 @@ Example Opcodes
 
 - 0 - Stop
 - 1 - Move forward
+- 00 - Slow forwards
 - 01 - Turn left
 - 10 - Turn right
 - 11 - Move backwards
