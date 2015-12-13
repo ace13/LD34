@@ -16,6 +16,7 @@ public:
 
 protected:
 	void addOpcode(const std::string& opcode, const std::string& name, const std::function<void(Robot&)>& func);
+	void eraseOpcode(const std::string& op);
 
 private:
 	struct OpCode

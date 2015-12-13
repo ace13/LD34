@@ -96,6 +96,14 @@ void Robot::setPosition(const sf::Vector2f& pos)
 {
 	mPosition = pos;
 }
+float Robot::getRotation() const
+{
+	return mState.Angle;
+}
+void Robot::setRotation(float ang)
+{
+	mState.Angle = ang;
+}
 
 const Program* Robot::getProgram() const
 {

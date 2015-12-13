@@ -25,6 +25,8 @@ public:
 
 	const sf::Vector2f& getPosition() const;
 	void setPosition(const sf::Vector2f& pos);
+	float getRotation() const;
+	void setRotation(float ang);
 
 	const Program* getProgram() const;
 	void setProgram(Program* prog);

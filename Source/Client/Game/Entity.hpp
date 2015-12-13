@@ -6,6 +6,8 @@
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/System/Vector2.hpp>
 
+#include <string>
+
 class asILockableSharedBool;
 class asIScriptModule;
 class asIScriptObject;
@@ -22,6 +24,11 @@ public:
 	virtual void update(const Timespan& dt);
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
+	virtual bool serialize(char* data, size_t size) const;
+	virtual bool deserialize(const char* data, size_t size);
+
+	virtual const std::string& getName() const;
+	virtual bool isScriptEntity() const;
 	virtual bool isGoal() const;
 	virtual bool isCompleted() const;
 
@@ -31,16 +38,21 @@ public:
 	static void registerType(ScriptManager&);
 	static bool preLoadInject(asIScriptModule* mod);
 
+	const asIScriptObject* getScriptObject() const;
+
+	static Entity* createFromType(const char* type, const char* data);
 	static Entity* createForScript(asIScriptModule* module, const char* type);
 
 protected:
 	void setGoal(bool isGoal = true);
 	void setCompleted(bool completed = true);
 
+	void setScriptObject(asIScriptObject* obj);
+
 private:
 	static Entity* createFromScript();
 
-	void setScriptObject(asIScriptObject* obj);
+	std::string mName;
 
 	asILockableSharedBool* mScript;
 	asIScriptObject* mObject;

@@ -1,10 +1,19 @@
 #pragma once
 
-#include <SFML/System/InputStream.hpp>
+#include "Robot.hpp"
 
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/System/InputStream.hpp>
+#include <SFML/System/Vector2.hpp>
+
+#include <list>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+class Engine;
+class Entity;
+class asIScriptModule;
 
 class Level
 {
@@ -33,73 +42,31 @@ public:
 	Level();
 	~Level();
 
+	void setEngine(Engine*);
+
 	bool loadFromFile(const std::string& file);
 	bool loadFromMemory(const void* data, size_t len);
 	bool loadFromStream(sf::InputStream& file);
 
-	bool saveToFile(const std::string& file);
+	bool saveToFile(const std::string& file) const;
 
+	bool hasFile(const std::string& file) const;
 	bool bakeFile(const std::string& file);
 	File&& getContained(const std::string& name) const;
 
 private:
-#pragma pack(push, 1)
-	struct OnDisk
-	{
-		struct Header
-		{
-			uint64_t Rows : 8;
-			uint64_t ObjCount : 10;
-			uint64_t ContainedFiles : 6;
+	typedef uint32_t RowWidth;
 
-			uint64_t BackgroundColor : 24;
+	Engine* mEngine;
 
-			char ScriptFile[24];
-		};
+	float mScale;
+	sf::Vector2u mSize;
+	std::vector<RowWidth> mBitmap;
+	sf::Color mBackground, mForeground;
+	Robot mPlayer;
+	
+	std::list<Entity*> mEntities;
+	asIScriptModule* mScriptModule;
 
-		struct PlayerObj
-		{
-			uint64_t PosX : 8;
-			uint64_t PosY : 8;
-			uint64_t Dir : 2;
-
-			char Programming[72];
-		};
-
-		struct ObjDef
-		{
-			uint8_t Type : 1;
-
-			union
-			{
-				struct DefObjDef
-				{
-					uint32_t PosX : 8;
-					uint32_t PosY : 8;
-					uint32_t Dir : 2;
-
-					char ObjType[16];
-				};
-				struct ScriptObjDef
-				{
-					char ScriptFile[48];
-					char ScriptObject[24];
-				};
-			};
-		};
-
-		struct ContainedFile
-		{
-			char FileName[12];
-			uint16_t FileSize;
-			uint16_t FileOffset;
-		};
-	};
-#pragma pack(pop)
-
-	//Header mHeader;
-	//PlayerData mPlayerData;
-	//std::vector<ObjDef> mObjects;
-	std::unordered_map<std::string, std::vector<char>> mFiles;
-
+	std::unordered_map<std::string, std::vector<char>> mFileData;
 };

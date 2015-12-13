@@ -31,6 +31,10 @@ void Program::addOpcode(const std::string& op, const std::string& name, const st
 {
 	mOpcodes[op] = { name, func };
 }
+void Program::eraseOpcode(const std::string& op)
+{
+	mOpcodes.erase(op);
+}
 
 BaseProgram::BaseProgram()
 {

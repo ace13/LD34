@@ -1,7 +1,13 @@
 #include "Entity.hpp"
 #include "../States/GameState.hpp"
 
+#include <Core/AS_Addons/scriptarray/scriptarray.h>
 #include <Core/ScriptManager.hpp>
+
+Entity* Entity::createFromType(const char* type, const char* data)
+{
+	return nullptr;
+}
 
 Entity* Entity::createForScript(asIScriptModule* module, const char* typeName)
 {
@@ -133,6 +139,88 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
+bool Entity::serialize(char* data, size_t size) const
+{
+	if (mScript && !mScript->Get())
+	{
+		auto* eng = mObject->GetEngine();
+
+		asIObjectType* t = eng->GetObjectTypeByDecl("array<char>");
+		CScriptArray* arr = CScriptArray::Create(t, size);
+
+		auto* ctx = eng->RequestContext();
+		ctx->Prepare(mObject->GetObjectType()->GetMethodByDecl("bool Serialize(array<int8>@)"));
+
+		ctx->SetObject(mObject);
+		ctx->SetArgObject(0, arr);
+
+		ctx->Execute();
+
+		bool ret = ctx->GetReturnByte() != 0;
+
+		ctx->Unprepare();
+		eng->ReturnContext(ctx);
+
+		for (uint32_t i = 0; i < arr->GetSize() && i < size; ++i)
+		{
+			data[i] = *(char*)arr->At(i);
+		}
+
+		arr->Release();
+
+		return ret;
+	}
+
+	return true;
+}
+bool Entity::deserialize(const char* data, size_t size)
+{
+	if (mScript && !mScript->Get())
+	{
+		auto* eng = mObject->GetEngine();
+
+		asIObjectType* t = eng->GetObjectTypeByDecl("array<char>");
+		CScriptArray* arr = CScriptArray::Create(t, size);
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			*(char*)arr->At(i) = data[i];
+		}
+
+		auto* ctx = eng->RequestContext();
+		ctx->Prepare(mObject->GetObjectType()->GetMethodByDecl("bool Deserialize(const array<int8>@)"));
+
+		ctx->SetObject(mObject);
+		ctx->SetArgObject(0, arr);
+
+		ctx->Execute();
+
+		bool ret = ctx->GetReturnByte() != 0;
+
+		ctx->Unprepare();
+		eng->ReturnContext(ctx);
+
+		arr->Release();
+
+		return ret;
+	}
+
+	return true;
+}
+
+const std::string& Entity::getName() const
+{
+	static std::string defaultName = "Entity";
+
+	if (mScript)
+		return mName;
+	return defaultName;
+}
+
+bool Entity::isScriptEntity() const
+{
+	return (mScript != nullptr);
+}
+
 bool Entity::isGoal() const
 {
 	return mIsGoal;
@@ -149,6 +237,11 @@ void Entity::setGoal(bool isGoal)
 void Entity::setCompleted(bool completed)
 {
 	mIsCompleted = completed;
+}
+
+const asIScriptObject* Entity::getScriptObject() const
+{
+	return mObject;
 }
 
 void Entity::setScriptObject(asIScriptObject* obj)
@@ -174,6 +267,8 @@ void Entity::setScriptObject(asIScriptObject* obj)
 
 	mObject = obj;
 	mObject->AddRef();
+
+	mName = mObject->GetObjectType()->GetName();
 
 	mDraw = mObject->GetObjectType()->GetMethodByDecl("void Draw(sf::Renderer@)");
 	mTick = mObject->GetObjectType()->GetMethodByDecl("void Tick(const Timespan&in)");
@@ -220,6 +315,9 @@ namespace
 		"	void Tick(const Timespan&in) { print(\"I am base\\n\"); }\n"
 		"	void Update(const Timespan&in) { }\n"
 		"	void Draw(sf::Renderer@) { } \n"
+		"\n"
+		"	void Serialize(array<int8>@) { }\n"
+		"	void Deserialize(const array<int8>@) { }\n"
 		"\n"
 		"	bool Completed {\n"
 		"		get const { return mObj.Completed; }\n"
