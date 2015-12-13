@@ -44,6 +44,7 @@ public:
 
 	void tick(const Timespan& dt);
 	void update(const Timespan& dt);
+	void drawBackface(sf::RenderTarget& rt);
 	void draw(sf::RenderTarget& rt);
 
 	void setEngine(Engine*);

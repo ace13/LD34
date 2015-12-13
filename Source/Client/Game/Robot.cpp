@@ -12,8 +12,8 @@
 namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
-		std::chrono::seconds(2),
-		{ 8, 2 },
+		std::chrono::seconds(4),
+		{ 4, 2 },
 		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
@@ -56,21 +56,25 @@ void Robot::tick(const Timespan& span)
 	else
 	{
 		mTargetState.Speed = 0;
-		mState.Speed = -0.5;
+		mState.Speed = mState.Speed / -2;
 	}
 
 	setRotation(mState.Angle * Math::RAD2DEG);
 
 	if (mParticles && (mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
 	{
-		sf::Vector2f tmp{
+		sf::Vector2f x{
+			cos(mState.Angle),
+			sin(mState.Angle)
+		};
+		sf::Vector2f y{
 			cos(mState.Angle + Math::PI2),
 			sin(mState.Angle + Math::PI2)
 		};
 
 		auto& pos = getPosition();
-		mParticles->addParticle(TRACK_PARTICLE, pos + (tmp * 10.f), {}, mState.Angle);
-		mParticles->addParticle(TRACK_PARTICLE, pos - (tmp * 10.f), {}, mState.Angle);
+		mParticles->addParticle(TRACK_PARTICLE, pos - (x * 15.f) + (y * 8.f), {}, mState.Angle);
+		mParticles->addParticle(TRACK_PARTICLE, pos - (x * 15.f) - (y * 8.f), {}, mState.Angle);
 	}
 }
 

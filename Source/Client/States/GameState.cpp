@@ -50,13 +50,13 @@ void GameState::enter(sf::RenderTarget* rt)
 	}
 
 	mLevel.loadFromFile("Test2");
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
 
 	mLevel.getPlayer().setPosition({
 		200,200
 	});
 
 	/*
-	mLevel.getPlayer().passParticleManager(&mPreParticles);
 	mLevel.getPlayer().setProgram(new BaseProgram());
 
 	mLevel.setSize({ 32, 32 });
@@ -165,6 +165,8 @@ void GameState::draw(sf::RenderTarget& target)
 
 	target.setView(view);
 	target.clear(mLevel.getOutsideColor());
+
+	mLevel.drawBackface(target);
 
 	mPreParticles.draw(target);
 

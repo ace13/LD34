@@ -162,70 +162,70 @@ void Level::update(const Timespan& dt)
 	for (auto& it : mEntities)
 		it->update(dt);
 }
-void Level::draw(sf::RenderTarget& rt)
+void Level::drawBackface(sf::RenderTarget& rt)
 {
+	sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4 + 4);
+
+	int maxWidth = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.y : mSize.x));
+	int maxHeight = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.x : mSize.y));
+
+	foreground.append({
+		{ 0, 0 },
+		mBackground
+	});
+	foreground.append({
+		{ maxWidth * mScale, 0 },
+		mBackground
+	});
+	foreground.append({
+		{ maxWidth * mScale, maxHeight * mScale },
+		mBackground
+	});
+	foreground.append({
+		{ 0, maxHeight * mScale },
+		mBackground
+	});
+
+	for (int i = 0; i < mBitmap.size(); ++i)
 	{
-		sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4 + 4);
-
-		int maxWidth = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.y : mSize.x));
-		int maxHeight = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.x : mSize.y));
-
-		foreground.append({
-			{ 0, 0 },
-			mBackground
-		});
-		foreground.append({
-			{ maxWidth * mScale, 0 },
-			mBackground
-		});
-		foreground.append({
-			{ maxWidth * mScale, maxHeight * mScale },
-			mBackground
-		});
-		foreground.append({
-			{ 0, maxHeight * mScale },
-			mBackground
-		});
-
-		for (int i = 0; i < mBitmap.size(); ++i)
+		for (int j = 0; j < maxWidth; ++j)
 		{
-			for (int j = 0; j < maxWidth; ++j)
+			int x, y;
+			if (mFlipped)
 			{
-				int x, y;
-				if (mFlipped)
-				{
-					x = j; y = i;
-				}
-				else
-				{
-					x = i; y = j;
-				}
-
-				if (!isBlocked(x, y))
-					continue;
-
-				foreground.append({
-					{ x*mScale, y*mScale },
-					mForeground
-				});
-				foreground.append({
-					{ x*mScale + mScale, y*mScale },
-					mForeground
-				});
-				foreground.append({
-					{ x*mScale + mScale, y*mScale + mScale },
-					mForeground
-				});
-				foreground.append({
-					{ x*mScale, y*mScale + mScale },
-					mForeground
-				});
+				x = j; y = i;
 			}
-		}
+			else
+			{
+				x = i; y = j;
+			}
 
-		rt.draw(foreground);
+			if (!isBlocked(x, y))
+				continue;
+
+			foreground.append({
+				{ x*mScale, y*mScale },
+				mForeground
+			});
+			foreground.append({
+				{ x*mScale + mScale, y*mScale },
+				mForeground
+			});
+			foreground.append({
+				{ x*mScale + mScale, y*mScale + mScale },
+				mForeground
+			});
+			foreground.append({
+				{ x*mScale, y*mScale + mScale },
+				mForeground
+			});
+		}
 	}
 
+	rt.draw(foreground);
+}
+void Level::draw(sf::RenderTarget& rt)
+{
 	rt.draw(mPlayer);
 	for (auto& it : mEntities)
 		rt.draw(*it);
