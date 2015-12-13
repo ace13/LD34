@@ -225,6 +225,11 @@ void Level::draw(sf::RenderTarget& rt)
 	rt.draw(mPlayer);
 }
 
+Level::operator bool() const
+{
+	return !mBitmap.empty();
+}
+
 Engine* Level::getEngine()
 {
 	return mEngine;
@@ -381,7 +386,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 			auto* ent = Entity::createForScript(sman.getEngine()->GetModule(it.Script.ScriptFile), it.Script.ScriptObject);
 			ent->deserialize(it.ObjectData, sizeof(it.ObjectData));
 
-			ent->setPosition(it.PosX * mScale, it.PosY * mScale);
+			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
 			ent->setRotation(float(it.Dir) * 90);
 
 			addEntity(ent);
@@ -390,7 +395,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		{
 			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData, sizeof(it.ObjectData));
 
-			ent->setPosition(it.PosX * mScale, it.PosY * mScale);
+			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
 			ent->setRotation(float(it.Dir) * 90);
 
 			addEntity(ent);
@@ -567,6 +572,16 @@ bool Level::hasFile(const std::string& file) const
 	return mFileData.count(lower) > 0;
 }
 
+std::list<std::string> Level::getFiles() const
+{
+	std::list<std::string> toRet;
+
+	for (auto& f : mFileData)
+		toRet.push_back(f.first);
+
+	return toRet;
+}
+
 bool Level::bakeFile(const std::string& file)
 {
 	std::ifstream ifs(file.c_str());
@@ -631,7 +646,7 @@ void Level::setSize(const sf::Vector2u& s)
 
 bool Level::isBlocked(uint8_t x, uint8_t y) const
 {
-	if (x > mSize.x || y > mSize.y)
+	if (x >= mSize.x || y >= mSize.y)
 		return true;
 
 	if (mFlipped)

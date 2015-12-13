@@ -25,12 +25,16 @@ public:
 	virtual void draw(sf::RenderTarget&);
 	virtual void drawUI(sf::RenderTarget&);
 
+	void loadLevel(const std::string& name);
+
 private:
 	std::string mCurCommand;
 	std::list<std::string> mScripts;
 	std::list<std::string> mHistory;
 	Level mLevel;
 
+	bool mEnded;
+	float mEndTimeout;
 	float mDot, mDir, mOff;
 
 	sf::Sound mTickSound;

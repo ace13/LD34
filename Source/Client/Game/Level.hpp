@@ -47,6 +47,8 @@ public:
 	void drawBackface(sf::RenderTarget& rt);
 	void draw(sf::RenderTarget& rt);
 
+	operator bool() const;
+
 	Engine* getEngine();
 	const Engine* getEngine() const;
 	void setEngine(Engine*);
@@ -59,6 +61,7 @@ public:
 	bool saveToFile(const std::string& file) const;
 
 	bool hasFile(const std::string& file) const;
+	std::list<std::string> getFiles() const;
 	bool bakeFile(const std::string& file);
 	File getContained(const std::string& name) const;
 

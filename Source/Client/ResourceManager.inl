@@ -103,7 +103,9 @@ ResourceManager::res_ptr<T> ResourceManager::get(const std::string& name)
 
 		auto& res = mResources[name];
 		res.Counter = 0;
-		res.Destructor = [](void* mem) { delete (T*)mem; };
+		res.Destructor = [](void* mem) {
+			delete (T*)mem;
+		};
 		res.Memory = resource;
 	}
 

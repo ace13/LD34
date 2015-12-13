@@ -96,6 +96,7 @@ private:
 	};
 	struct Persist
 	{
+		asILockableSharedBool* WeakRef;
 		asIScriptObject* Object;
 		std::function<void(asIScriptObject*)> Callback;
 	};

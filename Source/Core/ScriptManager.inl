@@ -86,7 +86,9 @@ void ScriptManager::runHook(const std::string& name, Args... args)
 
 	auto* ctx = mEngine->RequestContext();
 
-	for (auto& hook : mScriptHooks.at(name))
+	auto copy = mScriptHooks.at(name);
+
+	for (auto& hook : copy)
 	{
 		int r = 0;
 		r = ctx->Prepare(hook.Function);

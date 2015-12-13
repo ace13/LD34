@@ -241,7 +241,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
 	bool reload = mScripts.count(lower) > 0;
 
-	std::list<std::pair<Persist, bool>> toPersist;
+	std::list<Persist> toPersist;
 	asIScriptModule* module = mEngine->GetModule(lower.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
@@ -252,13 +252,20 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		for (auto it = mPersistant.begin(); it != mPersistant.end();)
 		{
+			if (it->WeakRef->Get())
+			{
+				it->WeakRef->Release();
+				it = mPersistant.erase(it);
+				continue;
+			}
+
 			auto* obj = it->Object;
 
 			if (obj->GetObjectType()->GetModule() == module)
 			{
 				serial.AddExtraObjectToStore(obj);
 
-				toPersist.push_back({ *it, false });
+				toPersist.push_back(*it);
 				obj->AddRef();
 
 				it = mPersistant.erase(it);
@@ -281,8 +288,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		{
 			for (auto& it : toPersist)
 			{
-				it.first.Object->Release();
-				mPersistant.push_back(it.first);
+				if (!it.WeakRef->Get())
+					it.Object->Release();
+				mPersistant.push_back(it);
 			}
 
 			return false;
@@ -295,8 +303,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		{
 			for (auto& it : toPersist)
 			{
-				it.first.Object->Release();
-				mPersistant.push_back(it.first);
+				if (!it.WeakRef->Get())
+					it.Object->Release();
+				mPersistant.push_back(it);
 			}
 
 #ifndef NDEBUG
@@ -327,8 +336,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	{
 		for (auto& it : toPersist)
 		{
-			it.first.Object->Release();
-			mPersistant.push_back(it.first);
+			if (!it.WeakRef->Get())
+				it.Object->Release();
+			mPersistant.push_back(it);
 		}
 
 		module->Discard();
@@ -341,8 +351,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	{
 		for (auto& it : toPersist)
 		{
-			it.first.Object->Release();
-			mPersistant.push_back(it.first);
+			if (!it.WeakRef->Get())
+				it.Object->Release();
+			mPersistant.push_back(it);
 		}
 
 		module->Discard();
@@ -362,15 +373,18 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		for (auto& it : toPersist)
 		{
-			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it.first.Object);
+			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it.Object);
 
-			if (it.first.Callback)
-				it.first.Callback(newObj);
+			if (it.Callback)
+				it.Callback(newObj);
 
-			mPersistant.push_back({ newObj, it.first.Callback });
+			mPersistant.push_back({ newObj->GetWeakRefFlag(), newObj, it.Callback });
+			newObj->GetWeakRefFlag()->AddRef();
 
-			if (!it.second && it.first.Object->Release() <= 0)
-				it.second = true;
+			if (!it.WeakRef->Get())
+				it.Object->Release();
+
+			it.WeakRef->Release();
 		}
 
 		mEngine->GarbageCollect(asGC_FULL_CYCLE);
@@ -437,9 +451,10 @@ void ScriptManager::unload(const std::string& name)
 
 		if (obj->GetObjectType()->GetModule() == module)
 		{
-			if (obj->Release() <= 0)
+			if (it->WeakRef->Get() || obj->Release() <= 0)
 				released.push_back(obj);
 
+			it->WeakRef->Release();
 			it = mPersistant.erase(it);
 		}
 		else
@@ -528,6 +543,10 @@ bool ScriptManager::removeHook(const std::string& hook, asIScriptFunction* func,
 	if (it != hooks.end())
 	{
 		hooks.erase(it, hooks.end());
+
+		if (hooks.empty())
+			mScriptHooks.erase(hook);
+
 		return true;
 	}
 
@@ -554,13 +573,34 @@ void ScriptManager::addHookFromScript(const std::string& hook, const std::string
 		return;
 	}
 
-	addPersist(obj, [&](asIScriptObject* newObj) {
-		auto& hooks = mScriptHooks.at(hook);
-		auto it = std::find_if(hooks.begin(), hooks.end(), [obj, funcptr](const ScriptHook& h) {return h.Function == funcptr, h.Object == obj; });
+	static std::function<void(asIScriptObject* oldObj, asIScriptFunction* func, asIScriptObject* newObj)> persistFunc;
+	if (!persistFunc)
+	persistFunc = [this](asIScriptObject* oldObj, asIScriptFunction* func, asIScriptObject* newObj)
+	{
+		for (auto& hooks : mScriptHooks)
+		{
+			auto it = std::find_if(hooks.second.begin(), hooks.second.end(), [oldObj, func](const ScriptHook& h) {return h.Function == func, h.Object == oldObj; });
 
-		it->Object->Release();
-		it->Object = newObj;
-		it->Object->AddRef();
+			if (it != hooks.second.end())
+			{
+				auto* decl = it->Function->GetDeclaration(false);
+				it->Function = newObj->GetObjectType()->GetMethodByDecl(decl);
+
+				it->Object->Release();
+				removePersist(it->Object);
+
+				it->Object = newObj;
+				it->Object->AddRef();
+
+				addPersist(newObj, [=](asIScriptObject* obj) {
+					persistFunc(newObj, func, obj);
+				});
+			}
+		}
+	};
+
+	addPersist(obj, [=](asIScriptObject* newObj) {
+		persistFunc(obj, funcptr, newObj);
 	});
 	obj->AddRef();
 }
@@ -611,13 +651,19 @@ void ScriptManager::addPersist(asIScriptObject* obj, const std::function<void(as
 {
 	auto it = std::find_if(mPersistant.begin(), mPersistant.end(), [obj](const Persist& p) { return p.Object == obj; });
 	if (it == mPersistant.end())
-		mPersistant.push_back({ obj, callback });
+	{
+		mPersistant.push_back({ obj->GetWeakRefFlag(), obj, callback });
+		obj->GetWeakRefFlag()->AddRef();
+	}
 }
 void ScriptManager::removePersist(asIScriptObject* obj)
 {
 	auto it = std::find_if(mPersistant.begin(), mPersistant.end(), [obj](const Persist& p) { return p.Object == obj; });
 	if (it != mPersistant.end())
+	{
+		it->WeakRef->Release();
 		mPersistant.erase(it);
+	}
 }
 
 asIScriptEngine* ScriptManager::getEngine()
