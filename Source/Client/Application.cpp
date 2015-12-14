@@ -251,7 +251,7 @@ void Application::run()
 
 	mState.primeRT(&window);
 
-	window.create({ 800, 600 }, "Ludum Dare #34");
+	window.create({ 800, 600 }, "BeatBots - LD#34");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
 	{
 		sf::Vector2f size = (sf::Vector2f)window.getSize();
