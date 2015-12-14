@@ -1,10 +1,11 @@
 #include "GameState.hpp"
 
 #include "../Application.hpp"
+#include "../ResourceManager.hpp"
+
 #include "../Game/Entity.hpp"
 #include "../Game/Goal.hpp"
 #include "../Game/Program.hpp"
-
 
 #include <Core/Engine.hpp>
 #include <Core/FileWatcher.hpp>
@@ -17,27 +18,33 @@
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Window/Event.hpp>
 
+namespace
+{
+	ResourceManager::Sound* explosionPrecache;
+}
+
 GameState::GameState() :
 	mEnded(false), mEndTimeout(0),
 	mNextExec(Clock::now()), mDot(0), mDir(-1)
 {
-
+	explosionPrecache = new	ResourceManager::Sound;
 }
 GameState::~GameState()
 {
-
+	
 }
 
 void GameState::enter(sf::RenderTarget* rt)
 {
 	sf::View tmp = rt->getView();
-	tmp.zoom(0.5);
+	tmp.zoom(0.4);
 	rt->setView(tmp);
 
 	mLevel.setEngine(&getEngine());
 	mLevel.setParticleManager(&mPreParticles);
 	mLevel.setParticleManager(&mPostParticles, true);
 
+	*explosionPrecache = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
 	mTick = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
 	mTickFail = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-fail.wav");
 	mTickSucceed = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-success.wav");
@@ -56,7 +63,7 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	//loadLevel("Level3.lvl");
+	loadLevel("Tutorial1.lvl");
 
 #define B(x,y) mLevel.setBlocked(x,y)
 #define U(x,y) do {Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0); \
@@ -68,6 +75,185 @@ ent->setPosition(x*150+75, y*150+75); \
 mLevel.addEntity(ent); } while(false);
 #define P(x,y) mLevel.getPlayer().setPosition(x*150+75, y*150+75);
 	
+	// Level7.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		5,
+		5
+	});
+
+	std::string level =
+		"#####"
+		"# G #"
+		"#   #"
+		"# P #"
+		"#####";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'B':
+			{
+				Entity* ent = Entity::createFromType("Box", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'W':
+			{
+				Entity* ent = Entity::createFromType("Pit", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'K':
+			{
+				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'D':
+			{
+				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+
+			case 'R': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(-90);
+	mLevel.getPlayer().initialize();
+
+	mLevel.bakeFile("level\\level7.as");
+	mLevel.saveToFile("Level7.lvl");
+	*/
+
+	// Level6.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		20,
+		10
+	});
+
+	std::string level =
+		"####################"
+		"########RG #########"
+		"##K######W######G###"
+		"## ####U#P# ####D###"
+		"#  R #       # R  ##"
+		"#R   # ##D#U #   R##"
+		"# R  # #R  # #  R ##"
+		"## ### # B # ### ###"
+		"#R     #   #R      #"
+		"####################";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'B':
+			{
+				Entity* ent = Entity::createFromType("Box", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'W':
+			{
+				Entity* ent = Entity::createFromType("Pit", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'K':
+			{
+				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'D':
+			{
+				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+
+			case 'R': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(90);
+	mLevel.getPlayer().initialize();
+
+	mLevel.bakeFile("level\\level6.as");
+	mLevel.saveToFile("Level6.lvl");
+	*/
+
 	// Level5.lvl
 	/*
 	mLevel.setScale(150);
@@ -628,7 +814,6 @@ mLevel.addEntity(ent); } while(false);
 
 	mLevel.saveToFile("Tutorial1.lvl");
 	*/
-	
 
 	/*
 	
@@ -669,6 +854,8 @@ mLevel.addEntity(ent); } while(false);
 }
 void GameState::exit(sf::RenderTarget*)
 {
+	delete explosionPrecache;
+
 	auto& sman = getEngine().get<ScriptManager>();
 	sman.clearPreLoadCallback();
 	sman.getEngine()->SetUserData(nullptr, 0x64EE);
@@ -689,6 +876,8 @@ void GameState::event(const sf::Event& ev)
 			mCurCommand += char(ev.text.unicode);
 		}
 	}
+	else if (ev.type == sf::Event::KeyReleased && ev.key.code == sf::Keyboard::R)
+		mLevel.resetLevel();
 }
 void GameState::tick(const Timespan& dt)
 {

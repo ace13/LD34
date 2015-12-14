@@ -227,11 +227,16 @@ void Level::drawBackface(sf::RenderTarget& rt)
 	}
 
 	rt.draw(foreground);
+
+	for (auto& it : mEntities)
+		if (it->getName() == "Pit")
+			rt.draw(*it);
 }
 void Level::draw(sf::RenderTarget& rt)
 {
 	for (auto& it : mEntities)
-		rt.draw(*it);
+		if (it->getName() != "Pit")
+			rt.draw(*it);
 	rt.draw(mPlayer);
 }
 
@@ -303,9 +308,13 @@ void Level::resetLevel()
 
 	mBitmap = lastLoadedRows;
 
+	/*
 	mPlayer = {};
 	mPlayer.setLevel(this);
 	mPlayer.passParticleManager(mParticlesPre);
+	*/
+
+	mPlayer.reset();
 
 	mPlayer.setPosition({
 		lastLoadedPlayer.PosX * mScale + mScale / 2,

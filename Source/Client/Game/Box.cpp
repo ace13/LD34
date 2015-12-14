@@ -33,11 +33,35 @@ void Box::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	sf::RectangleShape shape({
 		scale, scale
 	});
-
 	shape.setOrigin(scale / 2, scale / 2);
+	
+	shape.setFillColor({
+		0, 0, 0
+	});
+
+	target.draw(shape, states);
+	
+	shape.setScale(0.95, 0.95);
+	shape.setFillColor({
+		190, 190, 190
+	});
+
+	target.draw(shape, states);
+
+	shape.setScale(0.8, 0.8);
 	shape.setFillColor({
 		196, 128, 12
 	});
+
+	target.draw(shape, states);
+
+	shape.setFillColor({
+		190, 190, 190
+	});
+	shape.setScale(1, 1);
+	shape.setSize({ 10, scale + 15 });
+	shape.setOrigin(5, scale / 2 + 7.5);
+	shape.setRotation(-45);
 
 	target.draw(shape, states);
 }

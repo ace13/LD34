@@ -24,7 +24,7 @@ class UI
 	void levelEnd()
 	{
 		unhook();
-		LoadLevel("Tutorial2.lvl");
+		LoadLevel("Tutorial4.lvl");
 	}
 
 	void unhook()
@@ -52,23 +52,23 @@ class UI
 		switch (page)
 		{
 			case 0:
-				uiText.String = "Hello <subject name>,\nwelcome to BeatBots.";
+				uiText.String = "Well done. You're clearly\ngetting the hang of this.";
 				break;
 
 			case 1:
-				uiText.String = "You have been selected as\nrobot controllant #6852,\nfor your excellent ability in\n<subject skill>.";
+				uiText.String = "Here's a bit more of a challenge for you.\nLead the robot through the \"maze\".";
 				break;
 
 			case 2:
-				uiText.String = "Your task - as you've chosen to accept it\nis to control the robot seen in front of you.";
+				uiText.String = "(The command '0 1' will turn left)";
 				break;
 
 			case 3:
-				uiText.String = "The robot is stupid, so you have to guide it.\nYou guide the robot by giving it commands,\nthe robot will execute them on a set interval.\n\nHence the timer in the corner.";
+				uiText.String = "Here's a little recap;\n1 - Move forward\n0 - Stop moving\n0 1 - Turn left\n1 0 - Turn right";
 				break;
 
 			case 4:
-				uiText.String = "For now, just type a '1'.\nThe robot will see it as an order\nto go ahead and complete his task.\n\nThe lazy bastard.";
+				uiText.String = "(You can also use '1 1' to move backwards,\nor '0 0' to move forward carefully)";
 				break;
 		}
 		

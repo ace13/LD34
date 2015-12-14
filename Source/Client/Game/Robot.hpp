@@ -42,6 +42,7 @@ public:
 	void turn(float amount);
 
 	void initialize();
+	void reset();
 
 private:
 	struct State

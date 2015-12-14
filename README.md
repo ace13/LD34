@@ -1,5 +1,5 @@
-LD34
-=====
+BeatBots
+========
 
 My Ludum Dare 34 entry.
 
@@ -22,6 +22,8 @@ Example Opcodes
 - 01 - Turn left
 - 10 - Turn right
 - 11 - Move backwards
+- 011 - Turn around
+- 1011 - Do a moonwalk
 
 Dependencies
 ============

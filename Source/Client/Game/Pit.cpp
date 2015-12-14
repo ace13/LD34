@@ -36,10 +36,28 @@ void Pit::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	if (!mFull)
 		return;
 
-	shape.setScale(0.75, 0.75);
+
+	shape.setScale(0.7, 0.7);
 	shape.setFillColor({
-		196, 128, 12, 128
+		95, 95, 95
 	});
+
+	target.draw(shape, states);
+
+	shape.setScale(0.6, 0.6);
+	shape.setFillColor({
+		98, 64, 6
+	});
+
+	target.draw(shape, states);
+
+	shape.setFillColor({
+		95, 95, 95
+	});
+	shape.setScale(0.75, 0.75);
+	shape.setSize({ 10, scale + 15 });
+	shape.setOrigin(5, scale / 2 + 7.5);
+	shape.setRotation(-45);
 
 	target.draw(shape, states);
 }

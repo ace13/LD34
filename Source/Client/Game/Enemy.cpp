@@ -12,7 +12,7 @@ namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
 		std::chrono::seconds(4),
-		{ 4, 2 },
+		{ 4, 8 },
 		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
@@ -76,8 +76,8 @@ void Enemy::tick(const Timespan& span)
 				};
 
 				auto& pos = getPosition();
-				particles->addParticle(TRACK_PARTICLE, pos - (x * 15.f) + (y * 8.f), {}, getRotation() * Math::DEG2RAD);
-				particles->addParticle(TRACK_PARTICLE, pos - (x * 15.f) - (y * 8.f), {}, getRotation() * Math::DEG2RAD);
+				particles->addParticle(TRACK_PARTICLE, pos - (x * 5.f) + (y * 16.f), {}, getRotation() * Math::DEG2RAD);
+				particles->addParticle(TRACK_PARTICLE, pos - (x * 5.f) - (y * 16.f), {}, getRotation() * Math::DEG2RAD);
 			}
 		}
 	}

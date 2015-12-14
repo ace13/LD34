@@ -93,13 +93,16 @@ void Robot::tick(const Timespan& span)
 			}
 			else if (it->getName() == "BasicEnemy")
 			{
-				Enemy* test = (Enemy*)it;
+				if (getLevel()->getNumberOfCompletedGoals() < getLevel()->getNumberOfGoals())
+				{
+					Enemy* test = (Enemy*)it;
 
-				//mPlayerSound.setBuffer(*mExplodeSound);
-				//mPlayerSound.play();
+					mPlayerSound.setBuffer(*mExplodeSound);
+					mPlayerSound.play();
 
-				getLevel()->resetLevel();
-				return;
+					getLevel()->resetLevel();
+					return;
+				}
 			}
 			else if (it->getName() == "Door")
 			{
@@ -254,4 +257,16 @@ void Robot::initialize()
 
 	if (!mExplodeSound)
 		mExplodeSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
+}
+
+void Robot::reset()
+{
+	mTick = 0;
+	mKeyCount = 0;
+
+	mCurProgram = nullptr;
+	mState = {};
+	mTargetState = {};
+
+	sf::Transformable();
 }
