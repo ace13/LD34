@@ -69,4 +69,5 @@ class NextLoad
 	}
 
 	private float time = 0;
+	private uint page = 0;
 }
