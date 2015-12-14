@@ -29,5 +29,5 @@ Dependencies
 ============
 
 - CMake
-- SFML 3.2
+- SFML 2.3
 - Angelscript 2.30
