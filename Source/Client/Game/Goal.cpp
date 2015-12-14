@@ -12,7 +12,7 @@ Goal::Goal() :
 {
 	setGoal();
 
-	setRadius(25);
+	setRadius(40);
 }
 Goal::~Goal()
 {

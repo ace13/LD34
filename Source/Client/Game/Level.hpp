@@ -98,9 +98,9 @@ public:
 	int getNumberOfGoals() const;
 	int getNumberOfCompletedGoals() const;
 
-	const ParticleManager* getParticleManager() const;
-	ParticleManager* getParticleManager();
-	void setParticleManager(ParticleManager*);
+	const ParticleManager* getParticleManager(bool post = false) const;
+	ParticleManager* getParticleManager(bool post = false);
+	void setParticleManager(ParticleManager*, bool post = false);
 
 	const asIScriptModule* getScriptModule() const;
 	void setScriptModule(asIScriptModule* mod);
@@ -109,7 +109,7 @@ private:
 	typedef uint32_t RowWidth;
 
 	Engine* mEngine;
-	ParticleManager* mParticles;
+	ParticleManager* mParticlesPre, *mParticlesPost;
 	std::string mLoaded;
 
 	float mScale;

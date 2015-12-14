@@ -47,8 +47,8 @@ public:
 	float getRadius() const;
 	void setRadius(float);
 
-	const ParticleManager* getParticleManager() const;
-	ParticleManager* getParticleManager();
+	const ParticleManager* getParticleManager(bool post = false) const;
+	ParticleManager* getParticleManager(bool post=false);
 
 	const Level* getLevel() const;
 	Level* getLevel();

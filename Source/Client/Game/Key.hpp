@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.hpp"
+#include "../ResourceManager.hpp"
 
 class Key : public Entity
 {
@@ -19,5 +20,14 @@ public:
 
 	virtual const std::string& getName() const;
 
+	void take();
+
+	ResourceManager::Sound& getSound();
+	const ResourceManager::Sound& getSound() const;
+
 private:
+	ResourceManager::Texture mKeyTexture;
+	ResourceManager::Sound mKeySound;
+
+	float mTime;
 };

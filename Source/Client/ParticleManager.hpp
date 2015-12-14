@@ -30,6 +30,8 @@ public:
 	void update(const Timespan& dt);
 	void draw(sf::RenderTarget& target);
 
+	void clear();
+
 private:
 	struct ParticleImpl
 	{

@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Entity.hpp"
-#include "../ResourceManager.hpp"
 
-class Door : public Entity
+class Pit : public Entity
 {
 public:
-	Door();
-	~Door();
+	Pit();
+	~Pit();
 
 	virtual void tick(const Timespan& dt);
 	virtual void update(const Timespan& dt);
@@ -20,14 +19,8 @@ public:
 
 	virtual const std::string& getName() const;
 
-	bool isOpen() const;
-	void open();
-
-	ResourceManager::Sound& getSound();
-	const ResourceManager::Sound& getSound() const;
+	void fill();
 
 private:
-	bool mOpen;
-
-	ResourceManager::Sound mDoorSound;
+	bool mFull;
 };

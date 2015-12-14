@@ -7,11 +7,13 @@ SET(HEADERS
 	StateMachine.inl
 
 	Game/Entity.hpp
+	Game/Box.hpp
 	Game/Door.hpp
 	Game/Enemy.hpp
 	Game/Goal.hpp
 	Game/Key.hpp
 	Game/Level.hpp
+	Game/Pit.hpp
 	Game/Program.hpp
 	Game/Robot.hpp
 
@@ -34,11 +36,13 @@ SET(SOURCES
 	StateMachine.cpp
 
 	Game/Entity.cpp
+	Game/Box.cpp
 	Game/Door.cpp
 	Game/Enemy.cpp
 	Game/Goal.cpp
 	Game/Key.cpp
 	Game/Level.cpp
+	Game/Pit.cpp
 	Game/Program.cpp
 	Game/Robot.cpp
 

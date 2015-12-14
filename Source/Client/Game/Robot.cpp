@@ -3,7 +3,9 @@
 #include "Level.hpp"
 #include "Goal.hpp"
 #include "Door.hpp"
+#include "Key.hpp"
 #include "Enemy.hpp"
+#include "Box.hpp"
 
 #include "../ParticleManager.hpp"
 
@@ -73,8 +75,9 @@ void Robot::tick(const Timespan& span)
 		for (auto& it : standingOn)
 		{
 			auto& otherpos = it->getPosition();
+			float dist = Math::Length(getPosition() - otherpos);
 
-			if (Math::Length(getPosition() - otherpos) > getRadius() + it->getRadius())
+			if (dist > getRadius() + it->getRadius())
 				continue;
 
 			if (it->getName() == "Goal")
@@ -92,8 +95,8 @@ void Robot::tick(const Timespan& span)
 			{
 				Enemy* test = (Enemy*)it;
 
-				mPlayerSound.setBuffer(*mExplodeSound);
-				mPlayerSound.play();
+				//mPlayerSound.setBuffer(*mExplodeSound);
+				//mPlayerSound.play();
 
 				getLevel()->resetLevel();
 				return;
@@ -102,16 +105,53 @@ void Robot::tick(const Timespan& span)
 			{
 				Door* test = (Door*)it;
 
-				if (!test->isOpen() && mKeyCount > 0)
+				if ((dist <= getRadius() + test->getRadius()/1.5) && !test->isOpen() && mKeyCount > 0)
 				{
 					--mKeyCount;
 					test->open();
+
+					mPlayerSound.setBuffer(*test->getSound());
+					mPlayerSound.play();
 				}
 			}
 			else if (it->getName() == "Key")
 			{
-				getLevel()->removeEntity(it);
+				Key* test = (Key*)it;
+				test->take();
+
+				mPlayerSound.setBuffer(*test->getSound());
+				mPlayerSound.play();
+
 				++mKeyCount;
+			}
+			else if (it->getName() == "Box")
+			{
+				Box* test = (Box*)it;
+
+				if ((dist <= getRadius() + 56))
+				{
+					int ang = int((Math::PolarAngle(test->getPosition() - getPosition()) + (Math::PI/4)) / Math::PI2) % 4;
+					int realAng = int(mTargetState.Angle / Math::PI2) % 4;
+
+					if (ang < 0)
+						ang += 3;
+					if (realAng < 0)
+						realAng += 3;
+
+					float penetration = ((getRadius() + 56) - dist);
+
+					if (ang == realAng && std::abs(mState.Speed) > 0.5)
+					{
+						penetration /= 2;
+
+						test->push(ang * 90, penetration);
+					}
+
+					if (mState.Speed > 0)
+						penetration *= -1;
+
+					move(sf::Vector2f(std::cos(realAng * Math::PI2), std::sin(realAng * Math::PI2)) * penetration);
+				}
 			}
 		}
 

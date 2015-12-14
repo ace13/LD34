@@ -6,16 +6,20 @@
 #include "Entity.hpp"
 #include "Program.hpp"
 
+#include "../ParticleManager.hpp"
+
 #include <Core/Engine.hpp>
 #include <Core/Math.hpp>
 #include <Core/ScriptManager.hpp>
 
+#include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/System/InputStream.hpp>
 
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <vector>
 
@@ -100,6 +104,7 @@ namespace
 {
 	OnDisk::PlayerObj lastLoadedPlayer;
 	std::vector<OnDisk::ObjDef> lastLoadedObjects;
+	std::vector<OnDisk::Row> lastLoadedRows;
 }
 
 Level::File::File(const char* data, size_t size) :
@@ -227,7 +232,6 @@ void Level::draw(sf::RenderTarget& rt)
 {
 	for (auto& it : mEntities)
 		rt.draw(*it);
-
 	rt.draw(mPlayer);
 }
 
@@ -270,7 +274,7 @@ void Level::clearLevel()
 	mForeground = sf::Color::Black;
 	mPlayer = {};
 	mPlayer.setLevel(this);
-	mPlayer.passParticleManager(mParticles);
+	mPlayer.passParticleManager(mParticlesPre);
 
 	for (auto& it : mEntities)
 		it->release();
@@ -285,9 +289,23 @@ void Level::clearLevel()
 
 void Level::resetLevel()
 {
+	if (mLoaded.empty())
+	{
+		std::cout << "Tried to reset level, but is not loaded." << std::endl << std::endl
+			<< "Why are you trying to crash the game? :'(" << std::endl;
+		return;
+	}
+
+	if (mParticlesPre)
+		mParticlesPre->clear();
+	if (mParticlesPost)
+		mParticlesPost->clear();
+
+	mBitmap = lastLoadedRows;
+
 	mPlayer = {};
 	mPlayer.setLevel(this);
-	mPlayer.passParticleManager(mParticles);
+	mPlayer.passParticleManager(mParticlesPre);
 
 	mPlayer.setPosition({
 		lastLoadedPlayer.PosX * mScale + mScale / 2,
@@ -428,7 +446,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	}
 	mFlipped = lvlHeader.Flipped;
 	mScale = lvlHeader.Scale;
-	mBitmap = std::move(rows);
+	mBitmap = rows;
 	mOutside = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
 	mBackground = sf::Color(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
 	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
@@ -506,6 +524,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 
 	lastLoadedObjects = std::move(objs);
 	lastLoadedPlayer = std::move(player);
+	lastLoadedRows = std::move(rows);
 
 	return true;
 }
@@ -786,9 +805,6 @@ const Robot& Level::getPlayer() const
 
 bool Level::findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y)
 {
-	if (isBlocked(x, y))
-		return false;
-
 	sf::Vector2f pos{
 		x * mScale + mScale / 2,
 		y * mScale + mScale / 2
@@ -798,7 +814,7 @@ bool Level::findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y)
 	for (auto& it : mEntities)
 	{
 		auto& epos = it->getPosition();
-		if (Math::Length(epos - pos) <= it->getRadius())
+		if (Math::Length(epos - pos) <= mScale * 1.5)
 		{
 			out.push_back(it);
 			found = true;
@@ -850,17 +866,24 @@ int Level::getNumberOfCompletedGoals() const
 	return num;
 }
 
-const ParticleManager* Level::getParticleManager() const
+const ParticleManager* Level::getParticleManager(bool post) const
 {
-	return mParticles;
+	if (post)
+		return mParticlesPost;
+	return mParticlesPre;
 }
-ParticleManager* Level::getParticleManager()
+ParticleManager* Level::getParticleManager(bool post)
 {
-	return mParticles;
+	if (post)
+		return mParticlesPost;
+	return mParticlesPre;
 }
-void Level::setParticleManager(ParticleManager* p)
+void Level::setParticleManager(ParticleManager* p, bool post)
 {
-	mParticles = p;
+	if (post)
+		mParticlesPost = p;
+	else
+		mParticlesPre = p;
 }
 
 const asIScriptModule* Level::getScriptModule() const

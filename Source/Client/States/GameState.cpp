@@ -36,6 +36,7 @@ void GameState::enter(sf::RenderTarget* rt)
 
 	mLevel.setEngine(&getEngine());
 	mLevel.setParticleManager(&mPreParticles);
+	mLevel.setParticleManager(&mPostParticles, true);
 
 	mTick = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick.wav");
 	mTickFail = getEngine().get<ResourceManager>().get<sf::SoundBuffer>("tick-fail.wav");
@@ -55,7 +56,7 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	//loadLevel("Level1.lvl");
+	//loadLevel("Level3.lvl");
 
 #define B(x,y) mLevel.setBlocked(x,y)
 #define U(x,y) do {Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0); \
@@ -67,6 +68,282 @@ ent->setPosition(x*150+75, y*150+75); \
 mLevel.addEntity(ent); } while(false);
 #define P(x,y) mLevel.getPlayer().setPosition(x*150+75, y*150+75);
 	
+	// Level5.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		20,
+		10
+	});
+
+	std::string level =
+		"####################"
+		"####################"
+		"############    K###"
+		"### ###### # #######"
+		"#P          D   R#G#"
+		"#D#### ### # ##### #"
+		"# ######## #U#  K  #"
+		"#G######## ### #####"
+		"##########     #####"
+		"####################";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'B':
+			{
+				Entity* ent = Entity::createFromType("Box", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'W':
+			{
+				Entity* ent = Entity::createFromType("Pit", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'K':
+			{
+				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'D':
+			{
+				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+
+			case 'R': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(0);
+	mLevel.getPlayer().initialize();
+
+	mLevel.bakeFile("level\\level5.as");
+	mLevel.saveToFile("Level5.lvl");
+	*/
+
+	// Level4.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		18,
+		9
+	});
+
+	std::string level =
+		"##################"
+		"#   ##### ####   #"
+		"# P          D B #"
+		"## ###### ###### #"
+		"##W#K#### #####K #"
+		"##D#      ###### #"
+		"## ###### ###### #"
+		"##G######U######U#"
+		"##################";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'B':
+			{
+				Entity* ent = Entity::createFromType("Box", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'W':
+			{
+				Entity* ent = Entity::createFromType("Pit", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'K':
+			{
+				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'D':
+			{
+				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+
+			case 'R': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(0);
+	mLevel.getPlayer().initialize();
+
+	mLevel.bakeFile("level\\level4.as");
+	mLevel.saveToFile("Level4.lvl");
+	*/
+
+	// Level3.lvl
+	/*
+	mLevel.setScale(150);
+	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+
+	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
+
+	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mLevel.getPlayer().setProgram(new BaseProgram());
+
+	mLevel.setSize({
+		18,
+		9
+	});
+
+	std::string level =
+		"##################"
+		"# P#######K## ####"
+		"#   B   W        #"
+		"#############U## #"
+		"#  #######G####R #"
+		"# G######R  #### #"
+		"# ########D##### #"
+		"#                #"
+		"##################";
+
+	for (int y = 0; y < mLevel.getSize().y; ++y)
+		for (int x = 0; x < mLevel.getSize().x; ++x)
+		{
+			char obj = level[y*mLevel.getSize().x + x];
+
+			switch (obj)
+			{
+			case ' ': break;
+			case 'B':
+			{
+				Entity* ent = Entity::createFromType("Box", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'W':
+			{
+				Entity* ent = Entity::createFromType("Pit", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'K':
+			{
+				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			}
+			break;
+
+			case 'D':
+			{
+				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} B(x, y);
+			break;
+
+			case 'G': G(x, y); break;
+			case 'P': P(x, y); break;
+			case 'U': U(x, y); break;
+
+			case 'R': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case '#':
+			default:
+				B(x, y);
+				break;
+			}
+		}
+
+	mLevel.getPlayer().setRotation(-90);
+	mLevel.getPlayer().initialize();
+	
+	mLevel.bakeFile("level\\level3.as");
+	mLevel.saveToFile("Level3.lvl");
+	*/
+
+	// Level2.lvl
+	/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -119,6 +396,7 @@ mLevel.addEntity(ent); } while(false);
 			case 'G': G(x, y); break;
 			case 'P': P(x, y); break;
 			case 'U': U(x, y); break;
+
 			case 'R': {
 				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
@@ -135,7 +413,9 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 
-	mLevel.saveToFile("Level1.lvl");
+	mLevel.bakeFile("level\\level2.as");
+	mLevel.saveToFile("Level2.lvl");
+	*/
 
 	// Level1.lvl
 	/*
@@ -186,6 +466,7 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 
+	mLevel.bakeFile("level\\level1.as");
 	mLevel.saveToFile("Level1.lvl");
 	*/
 
@@ -477,6 +758,8 @@ void GameState::tick(const Timespan& dt)
 		mLevel.clearLevel();
 		mHistory.clear();
 		mCurCommand.clear();
+		mPreParticles.clear();
+		mPostParticles.clear();
 
 		mEnded = false;
 		mEndTimeout = 0;

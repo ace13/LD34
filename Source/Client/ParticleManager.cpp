@@ -29,7 +29,7 @@ void ParticleManager::update(const Timespan& span)
 		it->Angle += it->Definition->Rotation * dt;
 		it->Velocity += it->Definition->Gravity * dt;
 		if (it->Definition->Friction != 0)
-			it->Velocity *= (1.f / it->Definition->Friction) / dt;
+			it->Velocity *= it->Definition->Friction;
 
 		it->Position += it->Velocity * dt;
 		if (it->LifeTime > it->Definition->LifeTime)
@@ -86,4 +86,9 @@ void ParticleManager::draw(sf::RenderTarget& target)
 	}
 
 	target.draw(arr);
+}
+
+void ParticleManager::clear()
+{
+	mParticles.clear();
 }

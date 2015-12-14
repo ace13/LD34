@@ -4,8 +4,12 @@
 #include "Goal.hpp"
 #include "Key.hpp"
 #include "Level.hpp"
+#include "Box.hpp"
+#include "Pit.hpp"
 
 #include <Core/AS_Addons/scriptarray/scriptarray.h>
+
+#include <Core/Math.hpp>
 #include <Core/ScriptManager.hpp>
 
 Entity* Entity::createFromType(const char* type, const char* data, size_t len)
@@ -20,6 +24,10 @@ Entity* Entity::createFromType(const char* type, const char* data, size_t len)
 		toRet = new Key();
 	else if (strcmp(type, "Door") == 0)
 		toRet = new Door();
+	else if (strcmp(type, "Pit") == 0)
+		toRet = new Pit();
+	else if (strcmp(type, "Box") == 0)
+		toRet = new Box();
 
 	if (toRet)
 		toRet->deserialize(data, len);
@@ -162,8 +170,8 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 void Entity::move(const sf::Vector2f& vec)
 {
-	auto checkPos = getPosition() + vec * mRadius;
-	if (!mLevel->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
+	auto checkPos = (getPosition() + vec * mRadius) / mLevel->getScale();
+	if (!mLevel->isBlocked(uint8_t(checkPos.x), uint8_t(checkPos.y)))
 		sf::Transformable::move(vec);
 }
 
@@ -281,13 +289,13 @@ void Entity::setRadius(float r)
 	mRadius = r;
 }
 
-const ParticleManager* Entity::getParticleManager() const
+const ParticleManager* Entity::getParticleManager(bool post) const
 {
-	return mLevel->getParticleManager();
+	return mLevel->getParticleManager(post);
 }
-ParticleManager* Entity::getParticleManager()
+ParticleManager* Entity::getParticleManager(bool post)
 {
-	return mLevel->getParticleManager();
+	return mLevel->getParticleManager(post);
 }
 
 const Level* Entity::getLevel() const
