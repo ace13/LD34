@@ -398,18 +398,12 @@ namespace
 		"		set final { mObj.Goal = value; }\n"
 		"	}\n"
 		"\n"
-		"	sf::Vec2 Origin {\n"
-		"		get const final { return mObj.Origin; }\n"
-		"		set final { mObj.Origin = value; }\n"
-		"	}\n"
-		"	sf::Vec2 Position {\n"
-		"		get const final { return mObj.Position; }\n"
-		"		set final { mObj.Position = value; }\n"
-		"	}\n"
-		"	sf::Vec2 Scale {\n"
-		"		get const final { return mObj.Scale; }\n"
-		"		set final { mObj.Scale = value; }\n"
-		"	}\n"
+		"	const sf::Vec2& get_Origin() const final { return mObj.Origin; }\n"
+		"	void set_Origin(const sf::Vec2&in v) final { mObj.Origin = v; }\n"
+		"	const sf::Vec2& get_Position() const final { return mObj.Position; }\n"
+		"	void set_Position(const sf::Vec2&in v) final { mObj.Position = v; }\n"
+		"	const sf::Vec2& get_Scale() const final { return mObj.Scale; }\n"
+		"	void set_Scale(const sf::Vec2&in v) final { mObj.Scale = v; }\n"
 		"	float Rotation {\n"
 		"		get const final { return mObj.Rotation; }\n"
 		"		set final { mObj.Rotation = value; }\n"
@@ -466,6 +460,7 @@ void Entity::registerType(ScriptManager& man)
 
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool IsBlocked(const sf::Vec2&in) const", asFUNCTION(checkBlock), asCALL_CDECL_OBJFIRST));
 
+		// Base Entity
 		auto* mod = eng->GetModule("ScriptEntity", asGM_ALWAYS_CREATE);
 		mod->AddScriptSection("ScriptEntity", ScriptEntityCode.c_str(), ScriptEntityCode.size());
 		mod->Build();

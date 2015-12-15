@@ -28,11 +28,12 @@ ELSE () # Linux / Cygwin
 		ADD_DEFINITIONS(-DAS_CAN_USE_CPP11) # Clang hack, makes asGetTypeTraits work
 	ENDIF ()
 
-	SET(CMAKE_CXX_FLAGS                "-Wall -Wextra -std=c++11 -pedantic")
+ 	SET(CMAKE_CXX_FLAGS                "-Wall -Wextra -std=c++11 -pedantic -fPIC")
 	SET(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g")
 	SET(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
 	SET(CMAKE_CXX_FLAGS_RELEASE        "-Ofast -DNDEBUG")
 	SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+	SET(CMAKE_EXE_LINKER_FLAGS         "-Wl,-Bdynamic")
 ENDIF ()
 
 SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})

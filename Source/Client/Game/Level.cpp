@@ -36,16 +36,16 @@ namespace
 			uint16_t Flipped : 1;
 			uint16_t Rows : 6;
 			uint16_t Cols : 6;
-			uint16_t Unused2 : 3;
+			uint16_t : 3;
 
 			uint64_t ObjCount : 7;
 			uint64_t ContainedFiles : 7;
 			uint64_t BackgroundColor : 24;
 			uint64_t ForegroundColor : 24;
-			uint64_t Unused3 : 2;
+			uint64_t : 2;
 
 			uint32_t OutsideColor : 24;
-			uint32_t Unused4 : 16;
+			uint32_t : 16;
 
 			float Scale;
 
@@ -75,11 +75,11 @@ namespace
 
 			union
 			{
-				struct DefObjDef
+				struct
 				{
 					char ObjType[72];
 				} Default;
-				struct ScriptObjDef
+				struct
 				{
 					char ScriptFile[48];
 					char ScriptObject[24];
@@ -122,7 +122,7 @@ Level::File::operator bool() const
 	return mData != nullptr && mSize > 0;
 }
 
-int64_t Level::File::read(void* data, int64_t size)
+sf::Int64 Level::File::read(void* data, sf::Int64 size)
 {
 	size_t toRead = std::max(std::min(mSize - mGetP, size_t(size)), size_t(0));
 
@@ -133,16 +133,16 @@ int64_t Level::File::read(void* data, int64_t size)
 
 	return toRead;
 }
-int64_t Level::File::seek(int64_t position)
+sf::Int64 Level::File::seek(sf::Int64 position)
 {
 	mGetP = std::max(std::min(mSize, size_t(position)), size_t(0));
 	return mGetP;
 }
-int64_t Level::File::tell()
+sf::Int64 Level::File::tell()
 {
 	return mGetP;
 }
-int64_t Level::File::getSize()
+sf::Int64 Level::File::getSize()
 {
 	return mSize;
 }
@@ -180,8 +180,8 @@ void Level::drawBackface(sf::RenderTarget& rt)
 {
 	sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4 + 4);
 
-	int maxWidth = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.y : mSize.x));
-	int maxHeight = std::min(sizeof(RowWidth) * 8, (mFlipped ? mSize.x : mSize.y));
+	int maxWidth = std::min<int>(sizeof(RowWidth) * 8, (mFlipped ? mSize.y : mSize.x));
+	int maxHeight = std::min<int>(sizeof(RowWidth) * 8, (mFlipped ? mSize.x : mSize.y));
 
 	foreground.append({
 		{ 0, 0 },
@@ -339,7 +339,10 @@ void Level::resetLevel()
 			if (!sman.hasLoaded(it.Script.ScriptFile))
 			{
 				if (hasFile(it.Script.ScriptFile))
-					sman.loadFromStream(it.Script.ScriptFile, getContained(it.Script.ScriptFile));
+				{
+					auto file = getContained(it.Script.ScriptFile);
+					sman.loadFromStream(it.Script.ScriptFile, file);
+				}
 				else
 					sman.loadFromFile(it.Script.ScriptFile);
 			}
@@ -482,7 +485,10 @@ bool Level::loadFromMemory(const void* data, size_t len)
 			if (!sman.hasLoaded(it.Script.ScriptFile))
 			{
 				if (hasFile(it.Script.ScriptFile))
-					sman.loadFromStream(it.Script.ScriptFile, getContained(it.Script.ScriptFile));
+				{
+					auto file = getContained(it.Script.ScriptFile);
+					sman.loadFromStream(it.Script.ScriptFile, file);
+				}
 				else
 					sman.loadFromFile(it.Script.ScriptFile);
 			}
@@ -512,7 +518,10 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		if (!sman.hasLoaded(script))
 		{
 			if (hasFile(script))
-				sman.loadFromStream(script, getContained(script));
+			{
+				auto file = getContained(script);
+				sman.loadFromStream(script, file);
+			}
 			else
 				sman.loadFromFile(script);
 		}

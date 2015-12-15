@@ -79,6 +79,8 @@ public:
 	void registerHook(const std::string& name, const std::string& decl);
 	template<typename... Args>
 	void runHook(const std::string& name, Args... args);
+	template<typename T>
+	static void setCTXArg(asIScriptContext*, uint32_t id, T arg);
 
 	bool addHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
 	bool removeHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);

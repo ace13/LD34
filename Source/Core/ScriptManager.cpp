@@ -412,9 +412,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		mEngine->ReturnContext(ctx);
 	}
 
-	if (fun = module->GetFunctionByName("OnLoad"))
+	if ((fun = module->GetFunctionByName("OnLoad")))
 		module->RemoveFunction(fun);
-	if (fun = module->GetFunctionByName("OnReload"))
+	if ((fun = module->GetFunctionByName("OnReload")))
 		module->RemoveFunction(fun);
 
 	return true;
@@ -579,7 +579,7 @@ void ScriptManager::addHookFromScript(const std::string& hook, const std::string
 	{
 		for (auto& hooks : mScriptHooks)
 		{
-			auto it = std::find_if(hooks.second.begin(), hooks.second.end(), [oldObj, func](const ScriptHook& h) {return h.Function == func, h.Object == oldObj; });
+			auto it = std::find_if(hooks.second.begin(), hooks.second.end(), [oldObj, func](const ScriptHook& h) { return h.Function == func && h.Object == oldObj; });
 
 			if (it != hooks.second.end())
 			{
@@ -670,3 +670,22 @@ asIScriptEngine* ScriptManager::getEngine()
 {
 	return mEngine;
 }
+
+#define PRIMITIVE_ARG(Type, SetType) template<> \
+	void ScriptManager::setCTXArg<Type>(asIScriptContext* ctx, uint32_t id, Type arg) \
+	{ \
+		ctx->SetArg ## SetType (id, arg); \
+	}//
+
+	PRIMITIVE_ARG(uint8_t, Byte)
+	PRIMITIVE_ARG(uint16_t, Word)
+	PRIMITIVE_ARG(uint32_t, DWord)
+	PRIMITIVE_ARG(uint64_t, QWord)
+	PRIMITIVE_ARG(bool, Byte)
+	PRIMITIVE_ARG(int8_t, Byte)
+	PRIMITIVE_ARG(int16_t, Word)
+	PRIMITIVE_ARG(int32_t, DWord)
+	PRIMITIVE_ARG(int64_t, QWord)
+	PRIMITIVE_ARG(float, Float)
+	PRIMITIVE_ARG(double, Double)
+#undef PRIMITIVE_ARG

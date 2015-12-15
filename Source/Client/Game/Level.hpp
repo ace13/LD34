@@ -25,10 +25,10 @@ public:
 
 		operator bool() const;
 
-		int64_t read(void* data, int64_t size);
-		int64_t seek(int64_t position);
-		int64_t tell();
-		int64_t getSize();
+		sf::Int64 read(void* data, sf::Int64 size);
+		sf::Int64 seek(sf::Int64 position);
+		sf::Int64 tell();
+		sf::Int64 getSize();
 
 	private:
 		File(const char* data, size_t size);

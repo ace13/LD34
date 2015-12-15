@@ -98,10 +98,10 @@ void ResourceManager::registerScript(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("Font", "const sf::Font@ get_Font() const", asMETHODPR(res_ptr<sf::Font>, operator*, () const, const sf::Font&), asCALL_THISCALL));
 
 
-		AS_ASSERT(eng->RegisterGlobalFunction("Texture GetTexture(const string&in)", asMETHOD(ResourceManager, get<sf::Texture>), asCALL_THISCALL_ASGLOBAL, this));
-		AS_ASSERT(eng->RegisterGlobalFunction("SoundBuffer GetSoundBuffer(const string&in)", asMETHOD(ResourceManager, get<sf::SoundBuffer>), asCALL_THISCALL_ASGLOBAL, this));
-		AS_ASSERT(eng->RegisterGlobalFunction("Music GetMusic(const string&in)", asMETHOD(ResourceManager, get<sf::Music>), asCALL_THISCALL_ASGLOBAL, this));
-		AS_ASSERT(eng->RegisterGlobalFunction("Font GetFont(const string&in)", asMETHOD(ResourceManager, get<sf::Font>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Texture GetTexture(const string&in)", asMETHODPR(ResourceManager, get<sf::Texture>, (const std::string&), ResourceManager::res_ptr<sf::Texture>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("SoundBuffer GetSoundBuffer(const string&in)", asMETHODPR(ResourceManager, get<sf::SoundBuffer>, (const std::string&), ResourceManager::res_ptr<sf::SoundBuffer>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Music GetMusic(const string&in)", asMETHODPR(ResourceManager, get<sf::Music>, (const std::string&), ResourceManager::res_ptr<sf::Music>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Font GetFont(const string&in)", asMETHODPR(ResourceManager, get<sf::Font>, (const std::string&), ResourceManager::res_ptr<sf::Font>), asCALL_THISCALL_ASGLOBAL, this));
 
 		AS_ASSERT(eng->SetDefaultNamespace(""));
 	});

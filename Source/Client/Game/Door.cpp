@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Door.hpp"
 
 #include "Level.hpp"

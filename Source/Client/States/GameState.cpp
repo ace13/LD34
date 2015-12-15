@@ -76,7 +76,7 @@ mLevel.addEntity(ent); } while(false);
 #define P(x,y) mLevel.getPlayer().setPosition(x*150+75, y*150+75);
 	
 	// Level7.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -158,12 +158,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\level7.as");
+	mLevel.bakeFile("level/level7.as");
 	mLevel.saveToFile("Level7.lvl");
-	*/
+*/
 
 	// Level6.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -250,12 +250,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(90);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\level6.as");
+	mLevel.bakeFile("level/level6.as");
 	mLevel.saveToFile("Level6.lvl");
-	*/
+*/
 
 	// Level5.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -342,12 +342,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(0);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\level5.as");
+	mLevel.bakeFile("level/level5.as");
 	mLevel.saveToFile("Level5.lvl");
-	*/
+*/
 
 	// Level4.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -433,12 +433,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(0);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\level4.as");
+	mLevel.bakeFile("level/level4.as");
 	mLevel.saveToFile("Level4.lvl");
-	*/
+*/
 
 	// Level3.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -524,12 +524,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 	
-	mLevel.bakeFile("level\\level3.as");
+	mLevel.bakeFile("level/level3.as");
 	mLevel.saveToFile("Level3.lvl");
-	*/
+*/
 
 	// Level2.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -599,12 +599,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\level2.as");
+	mLevel.bakeFile("level/level2.as");
 	mLevel.saveToFile("Level2.lvl");
-	*/
+*/
 
 	// Level1.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -652,12 +652,12 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(-90);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\level1.as");
+	mLevel.bakeFile("level/level1.as");
 	mLevel.saveToFile("Level1.lvl");
-	*/
+*/
 
 	// Tutorial4.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color::Black);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
@@ -684,13 +684,13 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(90);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\tutorial4.as");
+	mLevel.bakeFile("level/tutorial4.as");
 
 	mLevel.saveToFile("Tutorial4.lvl");
-	*/
+*/
 
 	// Tutorial3.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color::Black);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
@@ -715,17 +715,17 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setRotation(0);
 	mLevel.getPlayer().initialize();
 
-	mLevel.bakeFile("level\\tutorial3.as");
+	mLevel.bakeFile("level/tutorial3.as");
 
 	mLevel.saveToFile("Tutorial3.lvl");
-	*/
+*/
 
 #undef B
 #undef G
 #undef P
 
 	// Tutorial2.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color::Black);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
@@ -769,13 +769,13 @@ mLevel.addEntity(ent); } while(false);
 	ent->setPosition(525, 225);
 	mLevel.addEntity(ent);
 
-	mLevel.bakeFile("level\\tutorial2.as");
+	mLevel.bakeFile("level/tutorial2.as");
 
 	mLevel.saveToFile("Tutorial2.lvl");
-	*/
+*/
 
 	// Tutorial1.lvl
-	/*
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color::Black);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
@@ -810,10 +810,10 @@ mLevel.addEntity(ent); } while(false);
 	ent->setPosition(225, 225);
 	mLevel.addEntity(ent);
 
-	mLevel.bakeFile("level\\tutorial1.as");
+	mLevel.bakeFile("level/tutorial1.as");
 
 	mLevel.saveToFile("Tutorial1.lvl");
-	*/
+*/
 
 	/*
 	
@@ -840,9 +840,6 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
 	mLevel.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
 
-	*
-
-	/*
 	auto* ent = Entity::createForScript(sman.getEngine()->GetModule("game\\robot.as"), "Robot");
 	ent->setPosition(500, 500);
 	mLevel.addEntity(ent);
@@ -1054,7 +1051,10 @@ void GameState::loadLevel(const std::string& name)
 		for (auto& file : mLevel.getFiles())
 		{
 			if (file.substr(file.size() - 3) == ".as")
-				getEngine().get<ScriptManager>().loadFromStream(file, mLevel.getContained(file));
+			{
+				auto fileS = mLevel.getContained(file);
+				getEngine().get<ScriptManager>().loadFromStream(file, fileS);
+			}
 		}
 
 

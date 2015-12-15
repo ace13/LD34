@@ -51,6 +51,52 @@ namespace sf
 		c.b = uint8_t(c.b / i);
 		return c;
 	}
+
+	namespace
+	{
+	void opAdd(asIScriptGeneric* gen)
+	{
+		sf::Color* a = (sf::Color*)gen->GetObject();
+		sf::Color* b = (sf::Color*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Color(*a + *b);
+	}
+	void opSub(asIScriptGeneric* gen)
+	{
+		sf::Color* a = (sf::Color*)gen->GetObject();
+		sf::Color* b = (sf::Color*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Color(*a - *b);
+	}
+	void opDiv(asIScriptGeneric* gen)
+	{
+		sf::Color* a = (sf::Color*)gen->GetObject();
+		sf::Color* b = (sf::Color*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Color(*a / *b);
+	}
+	void opDivFloat(asIScriptGeneric* gen)
+	{
+		sf::Color* a = (sf::Color*)gen->GetObject();
+		float b = gen->GetArgFloat(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Color(*a / b);
+	}
+	void opMul(asIScriptGeneric* gen)
+	{
+		sf::Color* a = (sf::Color*)gen->GetObject();
+		sf::Color* b = (sf::Color*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Color(*a * *b);
+	}
+	void opMulFloat(asIScriptGeneric* gen)
+	{
+		sf::Color* a = (sf::Color*)gen->GetObject();
+		float b = gen->GetArgFloat(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Color(*a * b);
+	}
+	}
 }
 
 void as::priv::RegColor(asIScriptEngine* eng)
@@ -71,18 +117,18 @@ void as::priv::RegColor(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opAssign(const Color&in)", asMETHODPR(sf::Color, operator=, (const sf::Color&), sf::Color&), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "bool opEquals(const Color&in) const", asFUNCTIONPR(sf::operator==, (const sf::Color&, const sf::Color&), bool), asCALL_CDECL_OBJFIRST));
 
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opAdd(const Color&in) const", asFUNCTIONPR(sf::operator+, (const sf::Color&, const sf::Color&), sf::Color), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opSub(const Color&in) const", asFUNCTIONPR(sf::operator-, (const sf::Color&, const sf::Color&), sf::Color), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opMul(const Color&in) const", asFUNCTIONPR(sf::operator*, (const sf::Color&, const sf::Color&), sf::Color), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opDiv(const Color&in) const", asFUNCTIONPR(sf::operator/, (const sf::Color&, const sf::Color&), sf::Color), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opMul(float) const", asFUNCTIONPR(sf::operator*, (const sf::Color&, float), sf::Color), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opDiv(float) const", asFUNCTIONPR(sf::operator/, (const sf::Color&, float), sf::Color), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opAdd(const Color&in) const", asFUNCTION(sf::opAdd), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opSub(const Color&in) const", asFUNCTION(sf::opSub), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opMul(const Color&in) const", asFUNCTION(sf::opMul), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opDiv(const Color&in) const", asFUNCTION(sf::opDiv), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opMul(float) const", asFUNCTION(sf::opMulFloat), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opDiv(float) const", asFUNCTION(sf::opDivFloat), asCALL_GENERIC));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opAddAssign(const Color&in)", asFUNCTIONPR(sf::operator+=, (sf::Color&, const sf::Color&), sf::Color&), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opSubAssign(const Color&in)", asFUNCTIONPR(sf::operator-=, (sf::Color&, const sf::Color&), sf::Color&), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opMulAssign(const Color&in)", asFUNCTIONPR(sf::operator*=, (sf::Color&, const sf::Color&), sf::Color&), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opMulAssign(float)", asFUNCTIONPR(sf::operator*=, (sf::Color&, float), sf::Color&), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color opDivAssign(float)", asFUNCTIONPR(sf::operator/=, (sf::Color&, float), sf::Color&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opMulAssign(float)", asFUNCTIONPR(sf::operator*=, (sf::Color&, float), sf::Color&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Color", "Color& opDivAssign(float)", asFUNCTIONPR(sf::operator/=, (sf::Color&, float), sf::Color&), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->SetDefaultNamespace("sf::Color"));
 

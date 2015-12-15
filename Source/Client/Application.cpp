@@ -20,7 +20,9 @@
 #include <Core/AS_Addons/scriptstdstring/scriptstdstring.h>
 #include <Core/AS_SFML/AS_SFML.hpp>
 
+#ifdef _WIN32
 #include <codecvt>
+#endif
 #include <iostream>
 #include <sstream>
 
@@ -308,13 +310,13 @@ void Application::run()
 			else
 			{
 				mState.event(ev);
-
+				/*
 				if (ev.type == sf::Event::KeyPressed ||
 					ev.type == sf::Event::KeyReleased)
 				{
 					bool pressed = ev.type == sf::Event::KeyPressed;
-					
-					man.runHook<sf::Keyboard::Key, bool>("Keyboard.Key", ev.key.code, pressed);
+
+					man.runHook<int, bool>("Keyboard.Key", ev.key.code, pressed);
 				}
 				else if(ev.type == sf::Event::JoystickButtonPressed ||
 					ev.type == sf::Event::JoystickButtonReleased)
@@ -325,7 +327,7 @@ void Application::run()
 				}
 				else if (ev.type == sf::Event::JoystickMoved)
 				{
-					man.runHook<uint32_t, sf::Joystick::Axis, float>("Joystick.Moved", ev.joystickMove.joystickId, ev.joystickMove.axis, ev.joystickMove.position);
+					man.runHook<uint32_t, uint32_t, float>("Joystick.Moved", ev.joystickMove.joystickId, ev.joystickMove.axis, ev.joystickMove.position);
 				}
 				else if (ev.type == sf::Event::MouseButtonPressed ||
 					ev.type == sf::Event::MouseButtonReleased)
@@ -333,18 +335,18 @@ void Application::run()
 					bool pressed = ev.type == sf::Event::MouseButtonPressed;
 
 					sf::Vector2f pos{ float(ev.mouseButton.x), float(ev.mouseButton.y) };
-					man.runHook<const sf::Vector2f&, sf::Mouse::Button, bool>("Mouse.Button", pos, ev.mouseButton.button, pressed);
+					man.runHook<const sf::Vector2f*, uint32_t, bool>("Mouse.Button", &pos, ev.mouseButton.button, pressed);
 				}
 				else if (ev.type == sf::Event::MouseMoved)
 				{
 					sf::Vector2f pos(sf::Mouse::getPosition(window));
-					man.runHook<const sf::Vector2f&>("Mouse.Moved", pos);
+					man.runHook<const sf::Vector2f*>("Mouse.Moved", &pos);
 				}
 				else if (ev.type == sf::Event::TextEntered)
 				{
 					man.runHook<uint32_t>("Text.Entered", ev.text.unicode);
 				}
-			}
+			*/}
 		}
 
 
@@ -355,14 +357,14 @@ void Application::run()
 		{
 			// Run fixed updates
 			mState.tick(tickLength);
-			man.runHook<const Timespan&>("Tick", tickLength);
+			man.runHook<const Timespan*>("Tick", &tickLength);
 
 			tickTime -= tickLength;
 		}
 
 		// Run per-frame updates
 		mState.update(dt);
-		man.runHook<const Timespan&>("Update", dt);
+		man.runHook<const Timespan*>("Update", &dt);
 
 
 		// ----------------
@@ -395,4 +397,20 @@ void Application::run()
 sf::RenderTarget& Application::getRT()
 {
 	return mEngine.get<sf::RenderWindow>();
+}
+
+template<>
+void ScriptManager::setCTXArg<const std::string*>(asIScriptContext* ctx, uint32_t id, const std::string* arg)
+{
+	ctx->SetArgObject(id, (std::string*)arg);
+}
+template<>
+void ScriptManager::setCTXArg<const Timespan*>(asIScriptContext* ctx, uint32_t id, const Timespan* arg)
+{
+	ctx->SetArgObject(id, (Timespan*)arg);
+}
+template<>
+void ScriptManager::setCTXArg<sf::RenderTarget*>(asIScriptContext* ctx, uint32_t id, sf::RenderTarget* arg)
+{
+	ctx->SetArgObject(id, arg);
 }
