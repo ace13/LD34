@@ -823,6 +823,9 @@ const Robot& Level::getPlayer() const
 
 bool Level::findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y)
 {
+	out = mEntities;
+	return true;
+
 	sf::Vector2f pos{
 		x * mScale + mScale / 2,
 		y * mScale + mScale / 2

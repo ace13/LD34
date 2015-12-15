@@ -63,7 +63,7 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	loadLevel("Tutorial1.lvl");
+	//loadLevel("Tutorial1.lvl");
 
 #define B(x,y) mLevel.setBlocked(x,y)
 #define U(x,y) do {Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0); \
@@ -79,7 +79,7 @@ mLevel.addEntity(ent); } while(false);
 /*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
-	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
+	mLevel.setForegroundColor(sf::Color(197, 0, 0));
 
 	mLevel.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
 
@@ -87,16 +87,20 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setProgram(new BaseProgram());
 
 	mLevel.setSize({
-		5,
-		5
+		9,
+		9
 	});
 
 	std::string level =
-		"#####"
-		"# G #"
-		"#   #"
-		"# P #"
-		"#####";
+		"         "
+		"         "
+		"   #G#   "
+		"  #####  "
+		"  #####  "
+		"   ###   "
+		"    #    "
+		"         "
+		"    P    ";
 
 	for (int y = 0; y < mLevel.getSize().y; ++y)
 		for (int x = 0; x < mLevel.getSize().x; ++x)
@@ -187,7 +191,7 @@ mLevel.addEntity(ent); } while(false);
 		"#R   # ##D#U #   R##"
 		"# R  # #R  # #  R ##"
 		"## ### # B # ### ###"
-		"#R     #   #R      #"
+		"#R     # K #R      #"
 		"####################";
 
 	for (int y = 0; y < mLevel.getSize().y; ++y)
@@ -347,7 +351,7 @@ mLevel.addEntity(ent); } while(false);
 */
 
 	// Level4.lvl
-/*
+
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -365,8 +369,8 @@ mLevel.addEntity(ent); } while(false);
 	std::string level =
 		"##################"
 		"#   ##### ####   #"
-		"# P          D B #"
-		"## ###### ###### #"
+		"# P     K    D B #"
+		"## ###############"
 		"##W#K#### #####K #"
 		"##D#      ###### #"
 		"## ###### ###### #"
@@ -435,7 +439,7 @@ mLevel.addEntity(ent); } while(false);
 
 	mLevel.bakeFile("level/level4.as");
 	mLevel.saveToFile("Level4.lvl");
-*/
+
 
 	// Level3.lvl
 /*

@@ -25,29 +25,6 @@ namespace
 
 namespace sf
 {
-	sf::Vector2f operator*(const sf::Vector2f& a, const sf::Vector2f& b)
-	{
-		return{ a.x * b.x, a.y * b.y };
-	}
-	sf::Vector2f operator/(const sf::Vector2f& a, const sf::Vector2f& b)
-	{
-		return{ a.x / b.x, a.y / b.y };
-	}
-	sf::Vector2f& operator*=(sf::Vector2f& a, const sf::Vector2f& b)
-	{
-		a.x *= b.x;
-		a.y *= b.y;
-
-		return a;
-	}
-	sf::Vector2f& operator/=(sf::Vector2f& a, const sf::Vector2f& b)
-	{
-		a.x /= b.x;
-		a.y /= b.y;
-
-		return a;
-	}
-
 	namespace
 	{
 	void opAdd(asIScriptGeneric* gen)

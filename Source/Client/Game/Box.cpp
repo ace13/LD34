@@ -7,6 +7,8 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 
+#include <algorithm>
+
 Box::Box()
 {
 
@@ -28,12 +30,12 @@ void Box::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	states.transform *= getTransform();
 
-	float scale = getLevel()->getScale() * 0.75;
+	float scale = getRadius();
 
 	sf::RectangleShape shape({
-		scale, scale
+		scale * 2, scale * 2
 	});
-	shape.setOrigin(scale / 2, scale / 2);
+	shape.setOrigin(scale, scale);
 	
 	shape.setFillColor({
 		0, 0, 0
@@ -77,7 +79,7 @@ bool Box::deserialize(const char* data, size_t size)
 
 void Box::initialize()
 {
-	setRadius(75);
+	setRadius(getLevel()->getScale() / 2);
 }
 
 const std::string& Box::getName() const
@@ -86,14 +88,56 @@ const std::string& Box::getName() const
 	return name;
 }
 
-void Box::push(float dir, float amount)
+bool Box::getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& out)
 {
-	auto change = sf::Vector2f(std::cos(dir * Math::DEG2RAD), std::sin(dir * Math::DEG2RAD));
+	sf::FloatRect aabb{
+		getPosition().x-getRadius(),
+		getPosition().y-getRadius(),
+		getRadius()*2,
+		getRadius()*2
+	};
+
+	sf::Vector2f closest{
+		std::max(aabb.left, std::min(pos.x, aabb.left + aabb.width)),
+		std::max(aabb.top, std::min(pos.y, aabb.top + aabb.height))
+	};
+
+	auto diff = closest - pos,
+		ndiff = Math::Normalized(diff);
+
+	if (Math::Length(diff) > radius)
+		return false;
+
+	static const sf::Vector2f dirs[]= {
+		{ 1, 0 },
+		{ 0, 1 },
+		{ -1, 0 },
+		{ 0, -1 }
+	};
+
+	float highestDot = -1;
+	for (auto& dir : dirs)
+	{
+		float dot = Math::Dot(ndiff, dir);
+		if (dot > highestDot)
+		{
+			highestDot = dot;
+
+			out = dir * Math::Length(dir * diff);
+		}
+	}
+
+	return true;
+}
+
+void Box::push(const sf::Vector2f& amount)
+{
+	auto change = Math::Normalized(amount);
 	auto before = getPosition();
 
-	move(change * amount);
+	move(amount);
 
-	if (Math::Length(getPosition() - before) < amount / 2)
+	if (Math::Length(getPosition() - before) < Math::Length(amount) / 2)
 	{
 		auto lpos = (getPosition() + change * (getLevel()->getScale()/2)) / getLevel()->getScale();
 
@@ -107,12 +151,11 @@ void Box::push(float dir, float amount)
 
 					float dist = Math::Length(getPosition() - pit->getPosition());
 
-					if (dist < (getRadius() + pit->getRadius() + amount*5))
+					if (dist < (getRadius() + pit->getRadius() + Math::Length(amount) * 2))
 					{
 						pit->fill();
 
 						getLevel()->removeEntity(this);
-						
 					}
 				}
 		}

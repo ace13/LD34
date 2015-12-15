@@ -77,7 +77,7 @@ void Robot::tick(const Timespan& span)
 			auto& otherpos = it->getPosition();
 			float dist = Math::Length(getPosition() - otherpos);
 
-			if (dist > getRadius() + it->getRadius())
+			if (dist > getRadius() + it->getRadius() && it->getName() != "Box")
 				continue;
 
 			if (it->getName() == "Goal")
@@ -131,29 +131,24 @@ void Robot::tick(const Timespan& span)
 			{
 				Box* test = (Box*)it;
 
-				if ((dist <= getRadius() + 56))
+				sf::Vector2f pushVec;
+				if (test->getPenetration(getPosition(), getRadius(), pushVec))
 				{
-					int ang = int((Math::PolarAngle(test->getPosition() - getPosition()) + (Math::PI/4)) / Math::PI2) % 4;
-					int realAng = int(mTargetState.Angle / Math::PI2) % 4;
+					//dist -= getRadius() + (test->getRadius() / 2);
 
-					if (ang < 0)
-						ang += 3;
-					if (realAng < 0)
-						realAng += 3;
-
-					float penetration = ((getRadius() + 56) - dist);
-
-					if (ang == realAng && std::abs(mState.Speed) > 0.5)
+					if (std::abs(mState.Speed) > 0.5)
 					{
-						penetration /= 2;
+						pushVec /= 2.f;
 
-						test->push(ang * 90, penetration);
+						test->push(pushVec);
 					}
 
-					if (mState.Speed > 0)
-						penetration *= -1;
+//					float rot = getRotation();
+//					setRotation(0);
 
-					move(sf::Vector2f(std::cos(realAng * Math::PI2), std::sin(realAng * Math::PI2)) * penetration);
+					move(pushVec * -1.f);
+
+//					setRotation(rot);
 				}
 			}
 		}

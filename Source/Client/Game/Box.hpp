@@ -19,7 +19,8 @@ public:
 
 	virtual const std::string& getName() const;
 
-	void push(float dir, float amount);
+	bool getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& penetrationVec);
+	void push(const sf::Vector2f& amount);
 
 private:
 };

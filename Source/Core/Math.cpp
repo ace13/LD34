@@ -1,6 +1,29 @@
 #include "Math.hpp"
 #include "ScriptManager.hpp"
 
+sf::Vector2f sf::operator*(const sf::Vector2f& a, const sf::Vector2f& b)
+{
+	return{ a.x * b.x, a.y * b.y };
+}
+sf::Vector2f sf::operator/(const sf::Vector2f& a, const sf::Vector2f& b)
+{
+	return{ a.x / b.x, a.y / b.y };
+}
+sf::Vector2f& sf::operator*=(sf::Vector2f& a, const sf::Vector2f& b)
+{
+	a.x *= b.x;
+	a.y *= b.y;
+
+	return a;
+}
+sf::Vector2f& sf::operator/=(sf::Vector2f& a, const sf::Vector2f& b)
+{
+	a.x /= b.x;
+	a.y /= b.y;
+
+	return a;
+}
+
 void Math::registerScriptData(ScriptManager& man)
 {
 	man.addExtension("Math types", [](asIScriptEngine* eng) {

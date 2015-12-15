@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SFML/System/Vector2.hpp>
+
 class ScriptManager;
 
 namespace Math
@@ -28,6 +30,10 @@ inline float Length(const T& v);
  */
 template<typename T>
 void SetLength(T& v, float len);
+/** Normalizes a vector
+ */
+template<typename T>
+inline T Normalized(const T& v);
 /** Calculate the polar angle of a vector
  * \note The angle is in radians
  */
@@ -39,6 +45,14 @@ constexpr float PolarAngle(const T& v);
 template<typename T>
 void SetPolarAngle(T& v, float ang);
 
+}
+
+namespace sf
+{
+	extern sf::Vector2f operator*(const sf::Vector2f& a, const sf::Vector2f& b);
+	extern sf::Vector2f operator/(const sf::Vector2f& a, const sf::Vector2f& b);
+	extern sf::Vector2f& operator*=(sf::Vector2f& a, const sf::Vector2f& b);
+	extern sf::Vector2f& operator/=(sf::Vector2f& a, const sf::Vector2f& b);
 }
 
 #include "Math.inl"
