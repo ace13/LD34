@@ -373,7 +373,7 @@ void Application::run()
 		window.clear();
 
 		// Draw things
-		window.setView(gameView);
+		//window.setView(gameView);
 		mState.draw(window);
 		man.runHook<sf::RenderTarget*>("Draw", &window);
 		gameView = window.getView();
@@ -382,6 +382,8 @@ void Application::run()
 		window.setView(uiView);
 		mState.drawUI(window);
 		man.runHook<sf::RenderTarget*>("DrawUI", &window);
+
+		window.setView(gameView);
 
 		window.display();
 

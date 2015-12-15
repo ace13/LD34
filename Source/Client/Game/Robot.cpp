@@ -6,6 +6,7 @@
 #include "Key.hpp"
 #include "Enemy.hpp"
 #include "Box.hpp"
+#include "Pit.hpp"
 
 #include "../ParticleManager.hpp"
 
@@ -58,7 +59,7 @@ void Robot::tick(const Timespan& span)
 
 	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * mLevel->getScale() * dt;
 
-	auto checkPos = getPosition() + newPos * mRadius;
+	auto checkPos = getPosition() + Math::Normalized(newPos) * mRadius + newPos;
 	if (!mLevel->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
 	{
 		move(newPos);
@@ -149,6 +150,17 @@ void Robot::tick(const Timespan& span)
 					move(pushVec * -1.f);
 
 //					setRotation(rot);
+				}
+			}
+			else if (it->getName() == "Pit")
+			{
+				Pit* test = (Pit*)it;
+				if (!test->isFull() && dist < getRadius() + it->getRadius() * 0.75 && getLevel()->getNumberOfCompletedGoals() < getLevel()->getNumberOfGoals())
+				{
+					mPlayerSound.setBuffer(*mExplodeSound);
+					mPlayerSound.play();
+
+					getLevel()->resetLevel();
 				}
 			}
 		}

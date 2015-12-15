@@ -27,7 +27,7 @@ Enemy::Enemy() :
 	mSpeed(150),
 	mTick(0)
 {
-	setRadius(30);
+	setRadius(35);
 }
 Enemy::~Enemy()
 {
@@ -51,34 +51,30 @@ void Enemy::tick(const Timespan& span)
 	else
 	{
 		auto newPos = sf::Vector2f(cos(getRotation() * Math::DEG2RAD), sin(getRotation() * Math::DEG2RAD)) * mSpeed * dt;
+		auto oldPos = getPosition();
+		move(newPos);
 
-		auto checkPos = (getPosition() + newPos * getRadius()) / getLevel()->getScale();
-		if (getLevel()->isBlocked(uint8_t(checkPos.x), uint8_t(checkPos.y)))
+		if (Math::Length(getPosition() - oldPos) < (mSpeed * dt) / 2)
 		{
 			mCurState = State_Turning;
 			mTargetAng = std::fmod((getRotation() + 180.f), 360.f);
 		}
-		else
+		else if ((mTick++ % 3 == 0))
 		{
-			move(newPos);
+			auto* particles = getParticleManager();
 
-			if ((mTick++ % 3 == 0))
-			{
-				auto* particles = getParticleManager();
+			sf::Vector2f x{
+				cos(getRotation() * Math::DEG2RAD),
+				sin(getRotation() * Math::DEG2RAD)
+			};
+			sf::Vector2f y{
+				cos(getRotation() * Math::DEG2RAD + Math::PI2),
+				sin(getRotation() * Math::DEG2RAD + Math::PI2)
+			};
 
-				sf::Vector2f x{
-					cos(getRotation() * Math::DEG2RAD),
-					sin(getRotation() * Math::DEG2RAD)
-				};
-				sf::Vector2f y{
-					cos(getRotation() * Math::DEG2RAD + Math::PI2),
-					sin(getRotation() * Math::DEG2RAD + Math::PI2)
-				};
-
-				auto& pos = getPosition();
-				particles->addParticle(TRACK_PARTICLE, pos - (x * 5.f) + (y * 16.f), {}, getRotation() * Math::DEG2RAD);
-				particles->addParticle(TRACK_PARTICLE, pos - (x * 5.f) - (y * 16.f), {}, getRotation() * Math::DEG2RAD);
-			}
+			auto& pos = getPosition();
+			particles->addParticle(TRACK_PARTICLE, pos - (x * 5.f) + (y * 16.f), {}, getRotation() * Math::DEG2RAD);
+			particles->addParticle(TRACK_PARTICLE, pos - (x * 5.f) - (y * 16.f), {}, getRotation() * Math::DEG2RAD);
 		}
 	}
 }

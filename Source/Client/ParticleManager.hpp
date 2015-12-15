@@ -20,7 +20,7 @@ public:
 		float Friction, Rotation;
 	};
 
-	static const int MAX_PARTICLES = 512;
+	static const int MAX_PARTICLES = 2048;
 
 	ParticleManager();
 	~ParticleManager();

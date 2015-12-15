@@ -170,7 +170,7 @@ void Entity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 void Entity::move(const sf::Vector2f& vec)
 {
-	auto checkPos = (getPosition() + vec * mRadius) / mLevel->getScale();
+	auto checkPos = (getPosition() + (Math::Normalized(vec) * getRadius()) + vec) / mLevel->getScale();
 	if (!mLevel->isBlocked(uint8_t(checkPos.x), uint8_t(checkPos.y)))
 		sf::Transformable::move(vec);
 }

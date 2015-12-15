@@ -19,6 +19,7 @@ public:
 
 	virtual const std::string& getName() const;
 
+	bool isFull() const;
 	void fill();
 
 private:

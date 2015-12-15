@@ -36,9 +36,11 @@ GameState::~GameState()
 
 void GameState::enter(sf::RenderTarget* rt)
 {
-	sf::View tmp = rt->getView();
+	mRT = rt;
+
+	sf::View tmp = mRT->getView();
 	tmp.zoom(0.4);
-	rt->setView(tmp);
+	mRT->setView(tmp);
 
 	mLevel.setEngine(&getEngine());
 	mLevel.setParticleManager(&mPreParticles);
@@ -63,7 +65,7 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	//loadLevel("Tutorial1.lvl");
+	loadLevel("Tutorial1.lvl");
 
 #define B(x,y) mLevel.setBlocked(x,y)
 #define U(x,y) do {Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0); \
@@ -178,21 +180,21 @@ mLevel.addEntity(ent); } while(false);
 	mLevel.getPlayer().setProgram(new BaseProgram());
 
 	mLevel.setSize({
-		20,
+		22,
 		10
 	});
 
 	std::string level =
-		"####################"
-		"########RG #########"
-		"##K######W######G###"
-		"## ####U#P# ####D###"
-		"#  R #       # R  ##"
-		"#R   # ##D#U #   R##"
-		"# R  # #R  # #  R ##"
-		"## ### # B # ### ###"
-		"#R     # K #R      #"
-		"####################";
+		"######################"
+		"###K#####RG #####K####"
+		"###G######W######G####"
+		"###D####N#P# ####D####"
+		"##  R #     U # R  ###"
+		"##R   # ## ## #   R###"
+		"## R  # #N  # #  R ###"
+		"### ### # B # ### ####"
+		"#R      # KU#R      L#"
+		"######################";
 
 	for (int y = 0; y < mLevel.getSize().y; ++y)
 		for (int x = 0; x < mLevel.getSize().x; ++x)
@@ -238,9 +240,23 @@ mLevel.addEntity(ent); } while(false);
 			case 'P': P(x, y); break;
 			case 'U': U(x, y); break;
 
+			case 'N': {
+			Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+			ent->setPosition(x * 150 + 75, y * 150 + 75);
+			ent->setRotation(90);
+			mLevel.addEntity(ent);
+			} break;
+
 			case 'R': {
 				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				mLevel.addEntity(ent);
+			} break;
+
+			case 'L': {
+				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setRotation(-90);
 				mLevel.addEntity(ent);
 			} break;
 
@@ -351,7 +367,7 @@ mLevel.addEntity(ent); } while(false);
 */
 
 	// Level4.lvl
-
+/*
 	mLevel.setScale(150);
 	mLevel.setOutsideColor(sf::Color(0x3F, 0x68, 0x26));
 	mLevel.setForegroundColor(sf::Color(0x3F, 0x68, 0x26));
@@ -369,8 +385,8 @@ mLevel.addEntity(ent); } while(false);
 	std::string level =
 		"##################"
 		"#   ##### ####   #"
-		"# P     K    D B #"
-		"## ###############"
+		"# P          D B #"
+		"## ###### ###### #"
 		"##W#K#### #####K #"
 		"##D#      ###### #"
 		"## ###### ###### #"
@@ -439,7 +455,7 @@ mLevel.addEntity(ent); } while(false);
 
 	mLevel.bakeFile("level/level4.as");
 	mLevel.saveToFile("Level4.lvl");
-
+*/
 
 	// Level3.lvl
 /*
@@ -956,6 +972,10 @@ void GameState::tick(const Timespan& dt)
 
 		getEngine().get<ScriptManager>().runHook("OnLevelEnd");
 	}
+
+	auto view = mRT->getView();
+	view.move((mLevel.getPlayer().getPosition() - view.getCenter()) * 0.01f);
+	mRT->setView(view);
 }
 void GameState::update(const Timespan& dt)
 {
@@ -974,7 +994,6 @@ void GameState::update(const Timespan& dt)
 void GameState::draw(sf::RenderTarget& target)
 {
 	auto view = target.getView();
-	view.move((mLevel.getPlayer().getPosition() - view.getCenter()) * 0.001f);
 
 	if (mEnded)
 	{

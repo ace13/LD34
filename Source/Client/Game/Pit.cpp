@@ -8,7 +8,6 @@
 Pit::Pit() :
 	mFull(false)
 {
-	setRadius(75);
 }
 Pit::~Pit()
 {
@@ -28,14 +27,17 @@ void Pit::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 	shape.setOrigin(scale / 2, scale / 2);
 	shape.setFillColor({
-		29, 29, 29
+		29, 29, 29, 96
 	});
 
-	target.draw(shape, states);
+	for (int i = 0; i < 10; ++i)
+	{
+		target.draw(shape, states);
+		shape.scale(0.9f, 0.9f);
+	}
 
 	if (!mFull)
 		return;
-
 
 	shape.setScale(0.7, 0.7);
 	shape.setFillColor({
@@ -73,8 +75,7 @@ bool Pit::deserialize(const char* data, size_t size)
 
 void Pit::initialize()
 {
-	auto lpos = getPosition() / getLevel()->getScale();
-	getLevel()->setBlocked(uint8_t(lpos.x), uint8_t(lpos.y));
+	setRadius(getLevel()->getScale() / 2);
 }
 
 const std::string& Pit::getName() const
@@ -83,10 +84,12 @@ const std::string& Pit::getName() const
 	return name;
 }
 
+bool Pit::isFull() const
+{
+	return mFull;
+}
+
 void Pit::fill()
 {
 	mFull = true;
-
-	auto lpos = getPosition() / getLevel()->getScale();
-	getLevel()->setBlocked(uint8_t(lpos.x), uint8_t(lpos.y), false);
 }

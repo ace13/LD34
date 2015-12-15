@@ -61,8 +61,8 @@ void Box::draw(sf::RenderTarget& target, sf::RenderStates states) const
 		190, 190, 190
 	});
 	shape.setScale(1, 1);
-	shape.setSize({ 10, scale + 15 });
-	shape.setOrigin(5, scale / 2 + 7.5);
+	shape.setSize({ 10, scale * 2.5f });
+	shape.setOrigin(5, scale * 1.25f);
 	shape.setRotation(-45);
 
 	target.draw(shape, states);
@@ -79,7 +79,7 @@ bool Box::deserialize(const char* data, size_t size)
 
 void Box::initialize()
 {
-	setRadius(getLevel()->getScale() / 2);
+	setRadius(getLevel()->getScale() / 3);
 }
 
 const std::string& Box::getName() const
@@ -108,6 +108,8 @@ bool Box::getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& ou
 	if (Math::Length(diff) > radius)
 		return false;
 
+	float pen = radius - Math::Length(diff);
+
 	static const sf::Vector2f dirs[]= {
 		{ 1, 0 },
 		{ 0, 1 },
@@ -123,7 +125,7 @@ bool Box::getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& ou
 		{
 			highestDot = dot;
 
-			out = dir * Math::Length(dir * diff);
+			out = dir * pen;
 		}
 	}
 
@@ -132,32 +134,27 @@ bool Box::getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& ou
 
 void Box::push(const sf::Vector2f& amount)
 {
-	auto change = Math::Normalized(amount);
-	auto before = getPosition();
-
 	move(amount);
 
-	if (Math::Length(getPosition() - before) < Math::Length(amount) / 2)
+	std::list<Entity*> ents;
+	if (getLevel()->findEntities(ents, 0, 0))
 	{
-		auto lpos = (getPosition() + change * (getLevel()->getScale()/2)) / getLevel()->getScale();
+		for (auto& it : ents)
+			if (it->getName() == "Pit")
+			{
+				Pit* pit = (Pit*)it;
+				if (pit->isFull())
+					continue;
 
-		std::list<Entity*> ents;
-		if (getLevel()->findEntities(ents, uint8_t(lpos.x), uint8_t(lpos.y)))
-		{
-			for (auto& it : ents)
-				if (it->getName() == "Pit")
+				float dist = Math::Length(getPosition() - pit->getPosition());
+
+				if (dist < (getRadius()/2 + pit->getRadius() / 2))
 				{
-					Pit* pit = (Pit*)it;
+					pit->fill();
 
-					float dist = Math::Length(getPosition() - pit->getPosition());
-
-					if (dist < (getRadius() + pit->getRadius() + Math::Length(amount) * 2))
-					{
-						pit->fill();
-
-						getLevel()->removeEntity(this);
-					}
+					getLevel()->removeEntity(this);
+					return;
 				}
-		}
+			}
 	}
 }

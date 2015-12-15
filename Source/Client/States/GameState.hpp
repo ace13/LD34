@@ -37,6 +37,7 @@ private:
 	float mEndTimeout;
 	float mDot, mDir, mOff;
 
+	sf::RenderTarget* mRT;
 	sf::Sound mTickSound;
 	ResourceManager::Sound mTick, mTickFail, mTickSucceed;
 
