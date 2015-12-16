@@ -440,6 +440,10 @@ void GameState::tick(const Timespan& dt)
 	}
 	else if (mEnded && mEndTimeout <= 0)
 	{
+		for (auto& file : mLevel.getFiles())
+			if (getEngine().get<ScriptManager>().hasLoaded(file))
+				getEngine().get<ScriptManager>().unload(file);
+
 		mLevel.clearLevel();
 		mHistory.clear();
 		mCurCommand.clear();
