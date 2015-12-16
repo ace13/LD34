@@ -55,8 +55,8 @@ public:
 	void setLevel(Level*);
 	const asIScriptObject* getScriptObject() const;
 
-	static Entity* createFromType(const char* type, const char* data, size_t len);
-	static Entity* createForScript(asIScriptModule* module, const char* type);
+	static Entity* createFromType(const std::string& name);
+	static Entity* createForScript(asIScriptModule* module, const std::string& type);
 
 protected:
 	void setGoal(bool isGoal = true);

@@ -89,7 +89,7 @@ public:
 	Robot& getPlayer();
 	const Robot& getPlayer() const;
 
-	bool findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y);
+	bool findEntities(std::list<Entity*>& out, const Entity& source);
 
 	void addEntity(Entity* ent);
 	void removeEntity(Entity* ent);
@@ -106,7 +106,21 @@ public:
 	void setScriptModule(asIScriptModule* mod);
 
 private:
+	struct ObjectData
+	{
+		uint8_t Type;
+
+		uint8_t X, Y, Dir;
+
+		std::string FileName;
+		std::string ObjectName;
+
+		std::string Serialized;
+	};
 	typedef uint32_t RowWidth;
+
+	std::vector<ObjectData> mPristineObjects;
+	std::vector<RowWidth> mPristineBitmap;
 
 	Engine* mEngine;
 	ParticleManager* mParticlesPre, *mParticlesPost;
@@ -117,7 +131,7 @@ private:
 	sf::Vector2u mSize;
 	std::vector<RowWidth> mBitmap;
 	sf::Color mBackground, mForeground, mOutside;
-	Robot mPlayer;
+	Robot* mPlayer;
 	
 	std::list<Entity*> mEntities;
 	asIScriptModule* mScriptModule;

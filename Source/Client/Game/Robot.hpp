@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Entity.hpp"
 #include "../ResourceManager.hpp"
 
 #include <Core/Time.hpp>
@@ -15,28 +16,25 @@ class ParticleManager;
 class Program;
 class Level;
 
-class Robot : public sf::Transformable, public sf::Drawable
+class Robot : public Entity
 {
 public:
 	Robot();
 	~Robot();
 
-	void tick(const Timespan& dt);
-	void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+	virtual void tick(const Timespan& dt);
+	virtual void update(const Timespan& dt);
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+
+	virtual bool serialize(char* data, size_t size) const;
+	virtual bool deserialize(const char* data, size_t size);
+
+	virtual const std::string& getName() const;
 
 	bool execute(const std::string& command);
 	
-	void passParticleManager(ParticleManager*);
-
-	const Level* getLevel() const;
-	Level* getLevel();
-	void setLevel(Level*);
-
 	const Program* getProgram() const;
 	void setProgram(Program* prog);
-
-	float getRadius() const;
-	void setRadius(float);
 
 	void setSpeed(float speed);
 	void turn(float amount);
@@ -52,14 +50,10 @@ private:
 	};
 
 	int mTick, mKeyCount;
-	Level* mLevel;
-	ParticleManager* mParticles;
 	State mState, mTargetState;
 
 	ResourceManager::Sound mExplodeSound;
 	sf::Sound mPlayerSound;
-
-	float mRadius;
 
 	Program* mCurProgram;
 };

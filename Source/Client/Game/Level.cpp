@@ -49,16 +49,8 @@ namespace
 
 			float Scale;
 
-			char ScriptFile[48];
-		};
-
-		struct PlayerObj
-		{
-			uint64_t PosX : 8;
-			uint64_t PosY : 8;
-			uint64_t Dir : 2;
-
-			char Programming[72];
+			uint8_t ScriptNameLength;
+			uint16_t ScriptDataLength;
 		};
 
 		struct ObjDef
@@ -77,34 +69,27 @@ namespace
 			{
 				struct
 				{
-					char ObjType[72];
+					uint8_t NameLength;
 				} Default;
 				struct
 				{
-					char ScriptFile[48];
-					char ScriptObject[24];
+					uint8_t ScriptLength;
+					uint8_t ObjectNameLength;
 				} Script;
 			};
 
-			char ObjectData[32];
+			uint16_t SerializedDataLength;
 		};
 
 		struct ContainedFile
 		{
-			char FileName[48];
+			uint8_t NameLength;
 			uint16_t FileSize;
 		};
 	};
 #pragma pack(pop)
 
 	static const OnDisk::Version FILE_VERSION = 4;
-}
-
-namespace
-{
-	OnDisk::PlayerObj lastLoadedPlayer;
-	std::vector<OnDisk::ObjDef> lastLoadedObjects;
-	std::vector<OnDisk::Row> lastLoadedRows;
 }
 
 Level::File::File(const char* data, size_t size) :
@@ -277,9 +262,7 @@ void Level::clearLevel()
 	mOutside = sf::Color::Black;
 	mBackground = sf::Color::White;
 	mForeground = sf::Color::Black;
-	mPlayer = {};
-	mPlayer.setLevel(this);
-	mPlayer.passParticleManager(mParticlesPre);
+	mPlayer = nullptr;
 
 	for (auto& it : mEntities)
 		it->release();
@@ -306,69 +289,51 @@ void Level::resetLevel()
 	if (mParticlesPost)
 		mParticlesPost->clear();
 
-	mBitmap = lastLoadedRows;
-
-	/*
-	mPlayer = {};
-	mPlayer.setLevel(this);
-	mPlayer.passParticleManager(mParticlesPre);
-	*/
-
-	mPlayer.reset();
-
-	mPlayer.setPosition({
-		lastLoadedPlayer.PosX * mScale + mScale / 2,
-		lastLoadedPlayer.PosY * mScale + mScale / 2
-	});
-	mPlayer.setRotation(
-		float(lastLoadedPlayer.Dir) * 90
-		);
-
-	mPlayer.setProgram(Program::createProgramming(lastLoadedPlayer.Programming));
-	mPlayer.initialize();
+	mBitmap = mPristineBitmap;
+	mPlayer = nullptr;
 
 	for (auto& it : mEntities)
 		it->release();
 	mEntities.clear();
 
 	auto& sman = mEngine->get<ScriptManager>();
-	for (auto& it : lastLoadedObjects)
+	for (auto& it : mPristineObjects)
 	{
+		Entity* ent;
 		if (it.Type == OnDisk::ObjDef::Type_Script)
 		{
-			if (!sman.hasLoaded(it.Script.ScriptFile))
+			if (!sman.hasLoaded(it.FileName))
 			{
-				if (hasFile(it.Script.ScriptFile))
+				if (hasFile(it.FileName))
 				{
-					auto file = getContained(it.Script.ScriptFile);
-					sman.loadFromStream(it.Script.ScriptFile, file);
+					auto file = getContained(it.FileName);
+					sman.loadFromStream(it.FileName, file);
 				}
 				else
-					sman.loadFromFile(it.Script.ScriptFile);
+					sman.loadFromFile(it.FileName);
 			}
 
-			auto* ent = Entity::createForScript(sman.getEngine()->GetModule(it.Script.ScriptFile), it.Script.ScriptObject);
-			ent->deserialize(it.ObjectData, sizeof(it.ObjectData));
-
-			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
-			ent->setRotation(float(it.Dir) * 90);
-
-			addEntity(ent);
+			ent = Entity::createForScript(sman.getEngine()->GetModule(it.FileName.c_str()), it.ObjectName.c_str());
 		}
 		else
-		{
-			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData, sizeof(it.ObjectData));
+			ent = Entity::createFromType(it.ObjectName);
 
-			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
-			ent->setRotation(float(it.Dir) * 90);
+		ent->deserialize(it.Serialized.c_str(), it.Serialized.size());
 
-			addEntity(ent);
-		}
+		ent->setPosition(it.X * mScale * 1.5f, it.Y * mScale * 1.5f);
+		ent->setRotation(it.Dir * 90);
+
+		if (ent->getName() == "Player")
+			mPlayer = (Robot*)ent;
+
+		addEntity(ent);
 	}
 }
 
 bool Level::loadFromFile(const std::string& file)
 {
+	clearLevel();
+
 	std::ifstream ifs(file.c_str());
 	if (!ifs)
 		return false;
@@ -389,6 +354,8 @@ bool Level::loadFromFile(const std::string& file)
 }
 bool Level::loadFromMemory(const void* data, size_t len)
 {
+	clearLevel();
+
 	if (!mEngine)
 		return false;
 
@@ -409,7 +376,8 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	size_t minSize = size_t(
 		sizeof(OnDisk::Version) +
 		sizeof(OnDisk::Header) +
-		sizeof(OnDisk::PlayerObj) +
+		(lvlHeader.ScriptNameLength) +
+		(lvlHeader.ScriptDataLength) +
 		(lvlHeader.Rows * sizeof(OnDisk::Row)) +
 		(lvlHeader.ObjCount * sizeof(OnDisk::ObjDef)) +
 		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile))
@@ -418,33 +386,60 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	if (len < minSize)
 		return false;
 
-	OnDisk::PlayerObj player = {};
-	reader.read(&player, sizeof(OnDisk::PlayerObj));
+	std::string levelScriptName('\0', lvlHeader.ScriptNameLength);
+	reader.read(&levelScriptName[0], lvlHeader.ScriptNameLength);
+	std::string levelScriptData('\0', lvlHeader.ScriptDataLength);
+	reader.read(&levelScriptData[0], lvlHeader.ScriptDataLength);
 
 	std::vector<OnDisk::Row> rows(lvlHeader.Rows);
 	if (!rows.empty())
 		reader.read(&rows[0], lvlHeader.Rows * sizeof(OnDisk::Row));
 
-	std::vector<OnDisk::ObjDef> objs(lvlHeader.ObjCount);
-	if (!objs.empty())
-		reader.read(&objs[0], lvlHeader.ObjCount * sizeof(OnDisk::ObjDef));
+	auto& sman = mEngine->get<ScriptManager>();
 
-	std::vector<OnDisk::ContainedFile> files(lvlHeader.ContainedFiles);
-	if (!files.empty())
-		reader.read(&files[0], lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile));
+	std::vector<ObjectData> objs(lvlHeader.ObjCount);
+	for (auto& it : objs)
+	{
+		OnDisk::ObjDef def;
+		reader.read(&def, sizeof(OnDisk::ObjDef));
+
+		it.Type = def.Type;
+		it.Dir = def.Dir;
+		it.X = def.PosX;
+		it.Y = def.PosY;
+
+		if (def.Type == OnDisk::ObjDef::Type_Script)
+		{
+			it.FileName.resize(def.Script.ScriptLength, 0);
+			reader.read(&it.FileName, def.Script.ScriptLength);
+			it.ObjectName.resize(def.Script.ObjectNameLength, 0);
+			reader.read(&it.ObjectName, def.Script.ObjectNameLength);
+		}
+		else
+		{
+			it.ObjectName.resize(def.Default.NameLength, 0);
+			reader.read(&it.ObjectName, def.Default.NameLength);
+		}
+
+		it.Serialized.resize(def.SerializedDataLength, 0);
+		reader.read(&it.Serialized, def.SerializedDataLength);
+	}
 
 	std::unordered_map<std::string, std::vector<char>> fileData;
-	for (auto& file : files)
+	for (int i = 0; i < lvlHeader.ContainedFiles; ++i)
 	{
-		auto& dataStore = fileData[file.FileName];
+		OnDisk::ContainedFile file = {};
+		reader.read((char*)&file, sizeof(OnDisk::ContainedFile));
+
+		std::string name('\0', file.NameLength);
+		reader.read(&name[0], file.NameLength);
+
+		auto& dataStore = fileData[name];
 		dataStore.resize(file.FileSize);
 
 		if (reader.read(&dataStore[0], file.FileSize) != file.FileSize)
 			return false;
 	}
-
-	// Load succeeded
-	clearLevel();
 	
 	if (lvlHeader.Flipped)
 	{
@@ -462,72 +457,24 @@ bool Level::loadFromMemory(const void* data, size_t len)
 	mOutside = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
 	mBackground = sf::Color(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
 	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
-	{
-		mPlayer.setPosition({
-			player.PosX * mScale + mScale / 2,
-			player.PosY * mScale + mScale / 2
-		});
-		mPlayer.setRotation(
-			float(player.Dir) * 90
-		);
-
-		mPlayer.setProgram(Program::createProgramming(player.Programming));
-		mPlayer.initialize();
-	}
 
 	mFileData = std::move(fileData);
 
-	auto& sman = mEngine->get<ScriptManager>();
-	for (auto& it : objs)
+	if (!levelScriptName.empty())
 	{
-		if (it.Type == OnDisk::ObjDef::Type_Script)
+		if (!sman.hasLoaded(levelScriptName))
 		{
-			if (!sman.hasLoaded(it.Script.ScriptFile))
+			if (hasFile(levelScriptName))
 			{
-				if (hasFile(it.Script.ScriptFile))
-				{
-					auto file = getContained(it.Script.ScriptFile);
-					sman.loadFromStream(it.Script.ScriptFile, file);
-				}
-				else
-					sman.loadFromFile(it.Script.ScriptFile);
-			}
-
-			auto* ent = Entity::createForScript(sman.getEngine()->GetModule(it.Script.ScriptFile), it.Script.ScriptObject);
-			ent->deserialize(it.ObjectData, sizeof(it.ObjectData));
-
-			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
-			ent->setRotation(float(it.Dir) * 90);
-
-			addEntity(ent);
-		}
-		else
-		{
-			auto* ent = Entity::createFromType(it.Default.ObjType, it.ObjectData, sizeof(it.ObjectData));
-
-			ent->setPosition(it.PosX * mScale + mScale / 2, it.PosY * mScale + mScale / 2);
-			ent->setRotation(float(it.Dir) * 90);
-
-			addEntity(ent);
-		}
-	}
-
-	std::string script(lvlHeader.ScriptFile);
-	if (!script.empty())
-	{
-		if (!sman.hasLoaded(script))
-		{
-			if (hasFile(script))
-			{
-				auto file = getContained(script);
-				sman.loadFromStream(script, file);
+				auto file = getContained(levelScriptName);
+				sman.loadFromStream(levelScriptName, file);
 			}
 			else
-				sman.loadFromFile(script);
+				sman.loadFromFile(levelScriptName);
 		}
 
 		auto* eng = sman.getEngine();
-		auto* mod = eng->GetModule(script.c_str());
+		auto* mod = eng->GetModule(levelScriptName.c_str());
 		asIScriptFunction* func = mod->GetFunctionByDecl("void OnLoad()");
 		if (func)
 		{
@@ -540,14 +487,17 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		}
 	}
 
-	lastLoadedObjects = std::move(objs);
-	lastLoadedPlayer = std::move(player);
-	lastLoadedRows = std::move(rows);
+	mPristineObjects = std::move(objs);
+	mPristineBitmap = std::move(rows);
+
+	resetLevel();
 
 	return true;
 }
 bool Level::loadFromStream(sf::InputStream& file)
 {
+	clearLevel();
+
 	size_t len = size_t(file.getSize());
 	std::vector<char> data(len);
 	file.read(&data[0], len);
@@ -821,21 +771,18 @@ const Robot& Level::getPlayer() const
 	return mPlayer;
 }
 
-bool Level::findEntities(std::list<Entity*>& out, uint8_t x, uint8_t y)
+bool Level::findEntities(std::list<Entity*>& out, const Entity& source)
 {
-	out = mEntities;
-	return true;
-
-	sf::Vector2f pos{
-		x * mScale + mScale / 2,
-		y * mScale + mScale / 2
-	};
+	auto& pos = source.getPosition();
 
 	bool found = false;
 	for (auto& it : mEntities)
 	{
+		if (&it == &source)
+			continue;
+
 		auto& epos = it->getPosition();
-		if (Math::Length(epos - pos) <= mScale * 1.5)
+		if (Math::Length(epos - pos) <= it->getRadius() + source.getRadius())
 		{
 			out.push_back(it);
 			found = true;

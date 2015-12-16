@@ -32,14 +32,11 @@ namespace
 Robot::Robot() : 
 	mTick(0),
 	mKeyCount(0),
-	mLevel(nullptr),
-	mParticles(nullptr),
-	mCurProgram(nullptr),
 	mState { },
 	mTargetState { },
-	mRadius(10)
+	mCurProgram(nullptr)
 {
-
+	setRadius(10)
 }
 Robot::~Robot()
 {
@@ -60,7 +57,7 @@ void Robot::tick(const Timespan& span)
 	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * mLevel->getScale() * dt;
 
 	auto checkPos = getPosition() + Math::Normalized(newPos) * mRadius + newPos;
-	if (!mLevel->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
+	if (!getLevel()->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
 	{
 		move(newPos);
 	}
@@ -70,9 +67,9 @@ void Robot::tick(const Timespan& span)
 		mState.Speed = mState.Speed / -2;
 	}
 
-	auto levelPos = getPosition() / mLevel->getScale();
+	auto levelPos = getPosition() / getLevel()->getScale();
 	std::list<Entity*> standingOn;
-	if (mLevel->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
+	if (getLevel()->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
 		for (auto& it : standingOn)
 		{
 			auto& otherpos = it->getPosition();
@@ -96,7 +93,7 @@ void Robot::tick(const Timespan& span)
 			{
 				if (getLevel()->getNumberOfCompletedGoals() < getLevel()->getNumberOfGoals())
 				{
-					Enemy* test = (Enemy*)it;
+					//Enemy* test = (Enemy*)it;
 
 					mPlayerSound.setBuffer(*mExplodeSound);
 					mPlayerSound.play();
@@ -168,7 +165,7 @@ void Robot::tick(const Timespan& span)
 
 	setRotation(mState.Angle * Math::RAD2DEG);
 
-	if (mParticles && (mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
+	if ((mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
 	{
 		sf::Vector2f x{
 			cos(mState.Angle),
@@ -180,9 +177,13 @@ void Robot::tick(const Timespan& span)
 		};
 
 		auto& pos = getPosition();
-		mParticles->addParticle(TRACK_PARTICLE, pos - (x * 15.f) + (y * 8.f), {}, mState.Angle);
-		mParticles->addParticle(TRACK_PARTICLE, pos - (x * 15.f) - (y * 8.f), {}, mState.Angle);
+		getLevel()->getParticleManager()->addParticle(TRACK_PARTICLE, pos - (x * 15.f) + (y * 8.f), {}, mState.Angle);
+		getLevel()->getParticleManager()->addParticle(TRACK_PARTICLE, pos - (x * 15.f) - (y * 8.f), {}, mState.Angle);
 	}
+}
+
+void Robot::update(const Timespan& dt)
+{
 }
 
 void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -199,31 +200,33 @@ void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
+bool Robot::serialize(char* data, size_t size) const
+{
+	auto& name = mCurProgram->getName();
+	std::copy(name.begin(), name.end(), data);
+	data[name.length()] = 0;
+
+	return true;
+}
+bool Robot::deserialize(const char* data, size_t size)
+{
+	mCurProgram = Program::createProgramming(std::string(data));
+
+	return true;
+}
+
+const std::string& Robot::getName() const
+{
+	static const std::string name = "Player";
+	return name;
+}
+
 bool Robot::execute(const std::string& command)
 {
 	if (mCurProgram)
 		return mCurProgram->execute(command, *this);
 
 	return false;
-}
-
-
-const Level* Robot::getLevel() const
-{
-	return mLevel;
-}
-Level* Robot::getLevel()
-{
-	return mLevel;
-}
-void Robot::setLevel(Level* level)
-{
-	mLevel = level;
-}
-
-void Robot::passParticleManager(ParticleManager* pman)
-{
-	mParticles = pman;
 }
 
 const Program* Robot::getProgram() const
@@ -237,15 +240,6 @@ void Robot::setProgram(Program* prog)
 		delete mCurProgram;
 
 	mCurProgram = prog;
-}
-
-float Robot::getRadius() const
-{
-	return mRadius;
-}
-void Robot::setRadius(float r)
-{
-	mRadius = r;
 }
 
 void Robot::setSpeed(float speed)
