@@ -161,6 +161,7 @@ void Robot::tick(const Timespan& span)
 					mPlayerSound.play();
 
 					getLevel()->resetLevel();
+					return;
 				}
 			}
 		}

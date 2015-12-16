@@ -79,7 +79,7 @@ bool Box::deserialize(const char* data, size_t size)
 
 void Box::initialize()
 {
-	setRadius(getLevel()->getScale() / 3);
+	setRadius(getLevel()->getScale() / 2.5);
 }
 
 const std::string& Box::getName() const
