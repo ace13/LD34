@@ -7,44 +7,42 @@
 #include "Box.hpp"
 #include "Pit.hpp"
 
-#include <Core/AS_Addons/scriptarray/scriptarray.h>
-
+#include <Core/Engine.hpp>
 #include <Core/Math.hpp>
 #include <Core/ScriptManager.hpp>
 
-Entity* Entity::createFromType(const char* type, const char* data, size_t len)
+Entity* Entity::createFromType(const std::string& type)
 {
 	Entity* toRet = nullptr;
 
-	if (strcmp(type, "Goal") == 0)
+	if (type == "Goal")
 		toRet = new Goal();
-	else if (strcmp(type, "BasicEnemy") == 0)
+	else if (type == "BasicEnemy")
 		toRet = new Enemy();
-	else if (strcmp(type, "Key") == 0)
+	else if (type == "Key")
 		toRet = new Key();
-	else if (strcmp(type, "Door") == 0)
+	else if (type == "Door")
 		toRet = new Door();
-	else if (strcmp(type, "Pit") == 0)
+	else if (type == "Pit")
 		toRet = new Pit();
-	else if (strcmp(type, "Box") == 0)
+	else if (type == "Box")
 		toRet = new Box();
-
-	if (toRet)
-		toRet->deserialize(data, len);
+	else if (type == "Player")
+		toRet = new Robot();
 
 	return toRet;
 }
 
-Entity* Entity::createForScript(asIScriptModule* module, const char* typeName)
+Entity* Entity::createForScript(asIScriptModule* module, const std::string& typeName)
 {
 	asIObjectType* type;
-	if (!module || !(type = module->GetObjectTypeByName(typeName)))
+	if (!module || !(type = module->GetObjectTypeByName(typeName.c_str())))
 	{
 		return nullptr;
 	}
 
 	auto* eng = module->GetEngine();
-	auto* func = type->GetFactoryByDecl((std::string(typeName) + " @" + typeName + "()").c_str());
+	auto* func = type->GetFactoryByDecl((typeName + " @" + typeName + "()").c_str());
 	auto* ctx = eng->RequestContext();
 	ctx->Prepare(func);
 	ctx->SetUserData((void*)0x01, 0x1EC7);
@@ -73,11 +71,6 @@ Entity* Entity::createFromScript()
 
 	Entity* toRet = new	Entity();
 	toRet->setScriptObject((asIScriptObject*)ctx->GetThisPointer());
-
-	ScriptManager* man = (ScriptManager*)ctx->GetEngine()->GetUserData(0x4547);
-	man->addPersist((asIScriptObject*)ctx->GetThisPointer(), [toRet](asIScriptObject* newObj) {
-		toRet->setScriptObject(newObj);
-	});
 
 	if (ctx->GetUserData(0x1EC7) != (void*)0x01)
 		((Level*)ctx->GetEngine()->GetUserData(0x1EE7))->addEntity(toRet);
@@ -175,58 +168,40 @@ void Entity::move(const sf::Vector2f& vec)
 		sf::Transformable::move(vec);
 }
 
-bool Entity::serialize(char* data, size_t size) const
+std::string Entity::serialize() const
 {
 	if (mScript && !mScript->Get())
 	{
 		auto* eng = mObject->GetEngine();
 
-		asIObjectType* t = eng->GetObjectTypeByDecl("array<int8>");
-		CScriptArray* arr = CScriptArray::Create(t, size);
-
 		auto* ctx = eng->RequestContext();
-		ctx->Prepare(mObject->GetObjectType()->GetMethodByDecl("bool Serialize(array<int8>@)"));
+		ctx->Prepare(mObject->GetObjectType()->GetMethodByDecl("string Serialize() const"));
 
 		ctx->SetObject(mObject);
-		ctx->SetArgObject(0, arr);
 
 		ctx->Execute();
 
-		bool ret = ctx->GetReturnByte() != 0;
+		std::string ret = *(std::string*)ctx->GetReturnObject();
 
 		ctx->Unprepare();
 		eng->ReturnContext(ctx);
-
-		for (uint32_t i = 0; i < arr->GetSize() && i < size; ++i)
-		{
-			data[i] = *(char*)arr->At(i);
-		}
-
-		arr->Release();
 
 		return ret;
 	}
 
-	return true;
+	return "";
 }
-bool Entity::deserialize(const char* data, size_t size)
+bool Entity::deserialize(const std::string& data)
 {
 	if (mScript && !mScript->Get())
 	{
 		auto* eng = mObject->GetEngine();
 
-		asIObjectType* t = eng->GetObjectTypeByDecl("array<int8>");
-		CScriptArray* arr = CScriptArray::Create(t, size);
-		for (uint32_t i = 0; i < size; ++i)
-		{
-			*(char*)arr->At(i) = data[i];
-		}
-
 		auto* ctx = eng->RequestContext();
-		ctx->Prepare(mObject->GetObjectType()->GetMethodByDecl("bool Deserialize(const array<int8>@)"));
+		ctx->Prepare(mObject->GetObjectType()->GetMethodByDecl("bool Deserialize(const string&in)"));
 
 		ctx->SetObject(mObject);
-		ctx->SetArgObject(0, arr);
+		ctx->SetArgObject(0, (std::string*)&data);
 
 		ctx->Execute();
 
@@ -234,8 +209,6 @@ bool Entity::deserialize(const char* data, size_t size)
 
 		ctx->Unprepare();
 		eng->ReturnContext(ctx);
-
-		arr->Release();
 
 		return ret;
 	}
@@ -318,6 +291,28 @@ const asIScriptObject* Entity::getScriptObject() const
 
 void Entity::setScriptObject(asIScriptObject* obj)
 {
+	auto& man = getLevel()->getEngine()->get<ScriptManager>();
+
+	if (!obj)
+	{
+		if (!mScript->Get())
+			mObject->Release();
+		mScript->Release();
+
+		man.removeChangeNotice(mObject);
+
+		mScript = nullptr;
+		mObject = nullptr;
+
+		mDraw = nullptr;
+		mTick = nullptr;
+		mUpdate = nullptr;
+
+		mName.clear();
+
+		return;
+	}
+
 	if (mScript)
 	{
 		auto oldObjProp = mObject->GetAddressOfProperty(0);
@@ -326,6 +321,8 @@ void Entity::setScriptObject(asIScriptObject* obj)
 		// Move the entity pointer over to the new object
 		*reinterpret_cast<Entity**>(newObjProp) = *reinterpret_cast<Entity**>(oldObjProp);
 		*reinterpret_cast<Entity**>(oldObjProp) = nullptr;
+
+		man.removeChangeNotice(mObject);
 
 		mObject->Release();
 		mObject = nullptr;
@@ -345,6 +342,10 @@ void Entity::setScriptObject(asIScriptObject* obj)
 	mDraw = mObject->GetObjectType()->GetMethodByDecl("void Draw(sf::Renderer@)");
 	mTick = mObject->GetObjectType()->GetMethodByDecl("void Tick(const Timespan&in)");
 	mUpdate = mObject->GetObjectType()->GetMethodByDecl("void Update(const Timespan&in)");
+
+	man.addChangeNotice(mObject, [this](asIScriptObject* newObj) {
+		setScriptObject(newObj);
+	});
 }
 
 int Entity::addRef()
@@ -382,8 +383,8 @@ namespace
 		"	void Update(const Timespan&in) { }\n"
 		"	void Draw(sf::Renderer@) { } \n"
 		"\n"
-		"	bool Serialize(array<int8>@) { return true; }\n"
-		"	bool Deserialize(const array<int8>@) { return true; }\n"
+		"	string Serialize() const { return \"\"; }\n"
+		"	bool Deserialize(const string&in) { return true; }\n"
 		"\n"
 		"	float Radius {\n"
 		"		get const final { return mObj.Radius; }\n"

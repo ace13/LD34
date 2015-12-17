@@ -35,13 +35,15 @@ void ScriptManager::registerSerializedType(const std::string& name)
 namespace
 {
 	template<typename... Args>
-	void setCTXArgs(asIScriptContext*, uint32_t) { }
+	inline bool setCTXArgs(asIScriptContext*, uint32_t) { return true; }
 
 	template<typename Arg, typename... Args>
-	void setCTXArgs(asIScriptContext* ctx, uint32_t id, Arg a1, Args... args)
+	inline bool setCTXArgs(asIScriptContext* ctx, uint32_t id, Arg a1, Args... args)
 	{
-		ScriptManager::setCTXArg<Arg>(ctx, id, std::forward<Arg>(a1));
-		setCTXArgs(ctx, id, std::forward<Args>(args)...);
+		if (ScriptManager::setCTXArg<Arg>(ctx, id, std::forward<Arg>(a1)) < 0)
+			return false;
+
+		return setCTXArgs(ctx, id, std::forward<Args>(args)...);
 	}
 }
 
@@ -61,11 +63,19 @@ void ScriptManager::runHook(const std::string& name, Args... args)
 		r = ctx->Prepare(hook.Function);
 		if (r < 0)
 			continue;
+		
 		r = ctx->SetObject(hook.Object);
 		if (r < 0)
+		{
+			ctx->Unprepare();
 			continue;
+		}
 
-		setCTXArgs<Args...>(ctx, 0, std::forward<Args>(args)...);
+		if (!setCTXArgs<Args...>(ctx, 0, std::forward<Args>(args)...))
+		{
+			ctx->Unprepare();
+			continue;
+		}
 
 		ctx->Execute();
 

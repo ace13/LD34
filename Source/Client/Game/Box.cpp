@@ -137,7 +137,7 @@ void Box::push(const sf::Vector2f& amount)
 	move(amount);
 
 	std::list<Entity*> ents;
-	if (getLevel()->findEntities(ents, 0, 0))
+	if (getLevel()->findEntities(ents, *this))
 	{
 		for (auto& it : ents)
 			if (it->getName() == "Pit")

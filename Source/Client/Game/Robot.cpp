@@ -36,7 +36,7 @@ Robot::Robot() :
 	mTargetState { },
 	mCurProgram(nullptr)
 {
-	setRadius(10)
+	setRadius(10);
 }
 Robot::~Robot()
 {
@@ -54,10 +54,10 @@ void Robot::tick(const Timespan& span)
 	mState.Angle += (mTargetState.Angle - mState.Angle) * dt * RotationSpeed;
 	mState.Speed += (mTargetState.Speed - mState.Speed) * dt * AccelerationSpeed;
 
-	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * mLevel->getScale() * dt;
+	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * getLevel()->getScale() * dt;
 
-	auto checkPos = getPosition() + Math::Normalized(newPos) * mRadius + newPos;
-	if (!getLevel()->isBlocked(uint8_t(checkPos.x / mLevel->getScale()), uint8_t(checkPos.y / mLevel->getScale())))
+	auto checkPos = getPosition() + Math::Normalized(newPos) * getRadius() + newPos;
+	if (!getLevel()->isBlocked(uint8_t(checkPos.x / getLevel()->getScale()), uint8_t(checkPos.y / getLevel()->getScale())))
 	{
 		move(newPos);
 	}
@@ -69,7 +69,7 @@ void Robot::tick(const Timespan& span)
 
 	auto levelPos = getPosition() / getLevel()->getScale();
 	std::list<Entity*> standingOn;
-	if (getLevel()->findEntities(standingOn, uint8_t(levelPos.x), uint8_t(levelPos.y)))
+	if (getLevel()->findEntities(standingOn, *this))
 		for (auto& it : standingOn)
 		{
 			auto& otherpos = it->getPosition();
@@ -200,19 +200,15 @@ void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-bool Robot::serialize(char* data, size_t size) const
+std::string Robot::serialize() const
 {
-	auto& name = mCurProgram->getName();
-	std::copy(name.begin(), name.end(), data);
-	data[name.length()] = 0;
-
-	return true;
+	return mCurProgram->getName();
 }
-bool Robot::deserialize(const char* data, size_t size)
+bool Robot::deserialize(const std::string& str)
 {
-	mCurProgram = Program::createProgramming(std::string(data));
+	mCurProgram = Program::createProgramming(str);
 
-	return true;
+	return mCurProgram != nullptr;
 }
 
 const std::string& Robot::getName() const

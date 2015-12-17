@@ -28,8 +28,8 @@ public:
 
 	void move(const sf::Vector2f&);
 
-	virtual bool serialize(char* data, size_t size) const;
-	virtual bool deserialize(const char* data, size_t size);
+	virtual std::string serialize() const;
+	virtual bool deserialize(const std::string&);
 
 	virtual const std::string& getName() const;
 	virtual bool isScriptEntity() const;

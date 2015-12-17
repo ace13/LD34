@@ -285,7 +285,7 @@ void Application::run()
 		if (watch.pollChange(modified))
 		{
 			std::cout << modified << " was modified!" << std::endl;
-			if (man.hasLoaded(modified))
+			if (man.isLoaded(modified))
 			{
 				man.loadFromFile(modified);
 			}
@@ -402,17 +402,17 @@ sf::RenderTarget& Application::getRT()
 }
 
 template<>
-void ScriptManager::setCTXArg<const std::string*>(asIScriptContext* ctx, uint32_t id, const std::string* arg)
+int ScriptManager::setCTXArg<const std::string*>(asIScriptContext* ctx, uint32_t id, const std::string* arg)
 {
-	ctx->SetArgObject(id, (std::string*)arg);
+	return ctx->SetArgObject(id, (std::string*)arg);
 }
 template<>
-void ScriptManager::setCTXArg<const Timespan*>(asIScriptContext* ctx, uint32_t id, const Timespan* arg)
+int ScriptManager::setCTXArg<const Timespan*>(asIScriptContext* ctx, uint32_t id, const Timespan* arg)
 {
-	ctx->SetArgObject(id, (Timespan*)arg);
+	return ctx->SetArgObject(id, (Timespan*)arg);
 }
 template<>
-void ScriptManager::setCTXArg<sf::RenderTarget*>(asIScriptContext* ctx, uint32_t id, sf::RenderTarget* arg)
+int ScriptManager::setCTXArg<sf::RenderTarget*>(asIScriptContext* ctx, uint32_t id, sf::RenderTarget* arg)
 {
-	ctx->SetArgObject(id, arg);
+	return ctx->SetArgObject(id, arg);
 }

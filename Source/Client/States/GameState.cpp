@@ -140,13 +140,14 @@ namespace
 			level.setOutsideColor(sf::Color::Black);
 			level.setBackgroundColor(sf::Color(0x4A, 0x70, 0x23));
 			level.setForegroundColor(sf::Color(0x96, 0x6F, 0x33));
-			level.getPlayer().setProgram(new BaseProgram());
 
 			buildLevel(level, lvl);
+			level.getPlayer()->setProgram(new BaseProgram());
 
 			oss.str("");
 			oss << "level/tutorial" << ++id << ".as";
 			level.bakeFile(oss.str());
+			level.setLevelScriptName(oss.str());
 			
 			oss.str("");
 			oss << "Tutorial" << id << ".lvl";
@@ -171,12 +172,13 @@ namespace
 				level.setBackgroundColor(sf::Color(0xA3, 0x75, 0x49));
 			}
 
-			level.getPlayer().setProgram(new BaseProgram());
 			buildLevel(level, lvl);
+			level.getPlayer()->setProgram(new BaseProgram());
 
 			oss.str("");
 			oss << "level/level" << ++id << ".as";
 			level.bakeFile(oss.str());
+			level.setLevelScriptName(oss.str());
 			
 			oss.str("");
 			oss << "Level" << id << ".lvl";
@@ -214,28 +216,28 @@ namespace
 
 			case 'B':
 			{
-				Entity* ent = Entity::createFromType("Box", nullptr, 0);
+				Entity* ent = Entity::createFromType("Box");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				level.addEntity(ent);
 			} break;
 
 			case 'W':
 			{
-				Entity* ent = Entity::createFromType("Pit", nullptr, 0);
+				Entity* ent = Entity::createFromType("Pit");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				level.addEntity(ent);
 			} break;
 
 			case 'K':
 			{
-				Entity* ent = Entity::createFromType("Key", nullptr, 0);
+				Entity* ent = Entity::createFromType("Key");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				level.addEntity(ent);
 			} break;
 
 			case 'D':
 			{
-				Entity* ent = Entity::createFromType("Door", nullptr, 0);
+				Entity* ent = Entity::createFromType("Door");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				level.addEntity(ent);
 				level.setBlocked(x, y);
@@ -243,50 +245,58 @@ namespace
 
 			case 'G':
 			{
-				Entity* ent = Entity::createFromType("Goal", nullptr, 0);
+				Entity* ent = Entity::createFromType("Goal");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				level.addEntity(ent);
 			} break;
 
 			case '>': {
-				level.getPlayer().setPosition(x * 150 + 75, y * 150 + 75);
+				Entity* ent = Entity::createFromType("Player");
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				level.addEntity(ent);
 			} break;
 			case 'V': {
-				level.getPlayer().setPosition(x * 150 + 75, y * 150 + 75);
-				level.getPlayer().setRotation(90);
+				Entity* ent = Entity::createFromType("Player");
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setRotation(90);
+				level.addEntity(ent);
 			} break;
 			case '<': {
-				level.getPlayer().setPosition(x * 150 + 75, y * 150 + 75);
-				level.getPlayer().setRotation(180);
+				Entity* ent = Entity::createFromType("Player");
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setRotation(180);
+				level.addEntity(ent);
 			} break;
 			case '^': {
-				level.getPlayer().setPosition(x * 150 + 75, y * 150 + 75);
-				level.getPlayer().setRotation(270);
+				Entity* ent = Entity::createFromType("Player");
+				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setRotation(270);
+				level.addEntity(ent);
 			} break;
 
 			case 'U': {
-				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				Entity* ent = Entity::createFromType("BasicEnemy");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				ent->setRotation(-90);
 				level.addEntity(ent);
 			} break;
 
 			case 'N': {
-				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				Entity* ent = Entity::createFromType("BasicEnemy");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				ent->setRotation(90);
 				level.addEntity(ent);
 			} break;
 
 			case 'L': {
-				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				Entity* ent = Entity::createFromType("BasicEnemy");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				ent->setRotation(180);
 				level.addEntity(ent);
 			} break;
 
 			case 'R': {
-				Entity* ent = Entity::createFromType("BasicEnemy", nullptr, 0);
+				Entity* ent = Entity::createFromType("BasicEnemy");
 				ent->setPosition(x * 150 + 75, y * 150 + 75);
 				level.addEntity(ent);
 			} break;
@@ -334,7 +344,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	sman.getEngine()->RegisterGlobalFunction("void LoadLevel(const string&in)", asMETHOD(GameState, loadLevel), asCALL_THISCALL_ASGLOBAL, this);
 	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
 	sman.registerHook("OnLevelEnd", "void f()");
-	sman.setPreLoadCallback(Entity::preLoadInject);
+	sman.addPreLoadCallback("ScriptEntity",Entity::preLoadInject);
 	sman.getEngine()->SetUserData(&mLevel, 0x1EE7);
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
@@ -344,16 +354,16 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	//bakeLevels(mLevel);
+	bakeLevels(mLevel);
 	
-	loadLevel("Tutorial1.lvl");
+	loadLevel("Level3.lvl");
 }
 void GameState::exit(sf::RenderTarget*)
 {
 	delete explosionPrecache;
 
 	auto& sman = getEngine().get<ScriptManager>();
-	sman.clearPreLoadCallback();
+	sman.removePreLoadCallback("ScriptEntity");
 	sman.getEngine()->SetUserData(nullptr, 0x64EE);
 	
 	for (auto& script : mScripts)
@@ -377,16 +387,16 @@ void GameState::event(const sf::Event& ev)
 }
 void GameState::tick(const Timespan& dt)
 {
+	auto* ply = mLevel.getPlayer();
+
 	if (Clock::now() >= mNextExec)
 	{
-		auto& ply = mLevel.getPlayer();
-
 		std::string name;
-		if (ply.getProgram())
+		if (ply && ply->getProgram())
 		{
-			name = ply.getProgram()->getName(mCurCommand);
+			name = ply->getProgram()->getName(mCurCommand);
 
-			if (mLevel.getPlayer().execute(mCurCommand) || !name.empty())
+			if (ply->execute(mCurCommand) || !name.empty())
 			{
 				mHistory.push_front(name);
 				if (mHistory.size() > 5)
@@ -440,32 +450,23 @@ void GameState::tick(const Timespan& dt)
 	}
 	else if (mEnded && mEndTimeout <= 0)
 	{
-		for (auto& file : mLevel.getFiles())
-			if (getEngine().get<ScriptManager>().hasLoaded(file))
-				getEngine().get<ScriptManager>().unload(file);
-
-		mLevel.clearLevel();
-		mHistory.clear();
-		mCurCommand.clear();
-		mPreParticles.clear();
-		mPostParticles.clear();
-
-		mEnded = false;
-		mEndTimeout = 0;
-
 		getEngine().get<ScriptManager>().runHook("OnLevelEnd");
+		ply = nullptr;
 	}
 
-	auto view = mRT->getView();
-	view.move((mLevel.getPlayer().getPosition() - view.getCenter()) * 0.01f);
-	mRT->setView(view);
+	if (ply)
+	{
+		auto view = mRT->getView();
+		view.move((ply->getPosition() - view.getCenter()) * 0.01f);
+		mRT->setView(view);
+	}
 }
 void GameState::update(const Timespan& dt)
 {
 	if (mEnded)
 	{
 		float dtSec = Time::Seconds(dt);
-		mEndTimeout -= dtSec;
+		mEndTimeout = std::max(mEndTimeout - dtSec, 0.f);
 	}
 
 	mDot = 1-Time::Seconds(mNextExec - Clock::now());
@@ -477,6 +478,7 @@ void GameState::update(const Timespan& dt)
 void GameState::draw(sf::RenderTarget& target)
 {
 	auto view = target.getView();
+	auto before = view;
 
 	if (mEnded)
 	{
@@ -497,13 +499,11 @@ void GameState::draw(sf::RenderTarget& target)
 
 	if (mEnded)
 	{
-		view.zoom((mEndTimeout * 2) /5);
-		view.rotate(((mEndTimeout * 2) -5) * 22.5);
-		target.setView(view);
+		target.setView(before);
 
-		sf::RectangleShape shape(view.getSize());
-		shape.setOrigin(view.getSize() / 2.f);
-		shape.setPosition(view.getCenter());
+		sf::RectangleShape shape(before.getSize());
+		shape.setOrigin(before.getSize() / 2.f);
+		shape.setPosition(before.getCenter());
 
 		shape.setFillColor({
 			0,0,0,
@@ -553,16 +553,13 @@ void GameState::drawUI(sf::RenderTarget& target)
 
 void GameState::loadLevel(const std::string& name)
 {
-	if (mLevel.loadFromFile(name))
-		for (auto& file : mLevel.getFiles())
-		{
-			if (file.substr(file.size() - 3) == ".as")
-			{
-				auto fileS = mLevel.getContained(file);
-				getEngine().get<ScriptManager>().loadFromStream(file, fileS);
-			}
-		}
+	mHistory.clear();
+	mCurCommand.clear();
+	mPreParticles.clear();
+	mPostParticles.clear();
 
+	mLevel.loadFromFile(name);
 
-	mLevel.getPlayer().passParticleManager(&mPreParticles);
+	mEnded = false;
+	mEndTimeout = 0;
 }

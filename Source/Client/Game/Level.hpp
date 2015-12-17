@@ -53,9 +53,6 @@ public:
 	const Engine* getEngine() const;
 	void setEngine(Engine*);
 
-	const std::string& getName() const;
-	void setName(const std::string&);
-
 	void clearLevel();
 	void resetLevel();
 
@@ -86,8 +83,8 @@ public:
 	const sf::Color& getForegroundColor() const;
 	void setForegroundColor(const sf::Color&);
 
-	Robot& getPlayer();
-	const Robot& getPlayer() const;
+	Robot* getPlayer();
+	const Robot* getPlayer() const;
 
 	bool findEntities(std::list<Entity*>& out, const Entity& source);
 
@@ -103,7 +100,9 @@ public:
 	void setParticleManager(ParticleManager*, bool post = false);
 
 	const asIScriptModule* getScriptModule() const;
-	void setScriptModule(asIScriptModule* mod);
+
+	const std::string& getLevelScriptName() const;
+	void setLevelScriptName(const std::string&);
 
 private:
 	struct ObjectData
@@ -124,10 +123,9 @@ private:
 
 	Engine* mEngine;
 	ParticleManager* mParticlesPre, *mParticlesPost;
-	std::string mLoaded;
 
 	float mScale;
-	bool mFlipped;
+	bool mFlipped, mDirty;
 	sf::Vector2u mSize;
 	std::vector<RowWidth> mBitmap;
 	sf::Color mBackground, mForeground, mOutside;
@@ -135,6 +133,7 @@ private:
 	
 	std::list<Entity*> mEntities;
 	asIScriptModule* mScriptModule;
+	std::string mScriptName;
 
 	std::unordered_map<std::string, std::vector<char>> mFileData;
 };

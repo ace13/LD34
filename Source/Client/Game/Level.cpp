@@ -33,19 +33,20 @@ namespace
 
 		struct Header
 		{
-			uint16_t Flipped : 1;
-			uint16_t Rows : 6;
-			uint16_t Cols : 6;
-			uint16_t : 3;
+			enum {
+				Flag_Flipped = 0x1
+			};
 
-			uint64_t ObjCount : 7;
-			uint64_t ContainedFiles : 7;
-			uint64_t BackgroundColor : 24;
-			uint64_t ForegroundColor : 24;
-			uint64_t : 2;
+			uint8_t Flags;
+			
+			uint8_t Rows;
+			uint8_t Cols;
 
-			uint32_t OutsideColor : 24;
-			uint32_t : 16;
+			uint8_t ObjCount;
+			uint8_t ContainedFiles;
+			uint32_t BackgroundColor;
+			uint32_t ForegroundColor;
+			uint32_t OutsideColor;
 
 			float Scale;
 
@@ -59,11 +60,11 @@ namespace
 				Type_Default = 0,
 				Type_Script = 1
 			};
-			uint8_t Type : 1;
+			uint8_t Type;
 
-			uint32_t PosX : 8;
-			uint32_t PosY : 8;
-			uint32_t Dir : 2;
+			uint8_t PosX;
+			uint8_t PosY;
+			uint8_t Dir;
 
 			union
 			{
@@ -109,6 +110,9 @@ Level::File::operator bool() const
 
 sf::Int64 Level::File::read(void* data, sf::Int64 size)
 {
+	if (size == 0)
+		return 0;
+
 	size_t toRead = std::max(std::min(mSize - mGetP, size_t(size)), size_t(0));
 
 	const char* dataP = mData + mGetP;
@@ -151,15 +155,25 @@ Level::~Level()
 
 void Level::tick(const Timespan& dt)
 {
-	mPlayer.tick(dt);
 	for (auto& it : mEntities)
+	{
 		it->tick(dt);
+
+		if (mDirty)
+			break;
+	}
+	mDirty = false;
 }
 void Level::update(const Timespan& dt)
 {
-//	mPlayer.update(dt);
 	for (auto& it : mEntities)
+	{
 		it->update(dt);
+
+		if (mDirty)
+			break;
+	}
+	mDirty = false;
 }
 void Level::drawBackface(sf::RenderTarget& rt)
 {
@@ -214,15 +228,26 @@ void Level::drawBackface(sf::RenderTarget& rt)
 	rt.draw(foreground);
 
 	for (auto& it : mEntities)
+	{
 		if (it->getName() == "Pit")
 			rt.draw(*it);
+
+		if (mDirty)
+			break;
+	}
+	mDirty = false;
 }
 void Level::draw(sf::RenderTarget& rt)
 {
 	for (auto& it : mEntities)
+	{
 		if (it->getName() != "Pit")
 			rt.draw(*it);
-	rt.draw(mPlayer);
+
+		if (mDirty)
+			break;
+	}
+	mDirty = false;
 }
 
 Level::operator bool() const
@@ -243,22 +268,12 @@ void Level::setEngine(Engine* eng)
 	mEngine = eng;
 }
 
-const std::string& Level::getName() const
-{
-	return mLoaded;
-}
-void Level::setName(const std::string& name)
-{
-	mLoaded = name;
-}
-
 void Level::clearLevel()
 {
-	mLoaded.clear();
-
 	mScale = 1;
 	mSize = {};
 	mBitmap.clear();
+	mScriptName.clear();
 	mOutside = sf::Color::Black;
 	mBackground = sf::Color::White;
 	mForeground = sf::Color::Black;
@@ -269,7 +284,22 @@ void Level::clearLevel()
 	mEntities.clear();
 
 	if (mScriptModule)
-		mScriptModule->Discard();
+	{
+		auto& sman = mEngine->get<ScriptManager>();
+		auto* fun = mScriptModule->GetFunctionByDecl("void OnUnload()");
+		if (fun)
+		{
+			auto* ctx = sman.getEngine()->RequestContext();
+
+			ctx->Prepare(fun);
+			ctx->Execute();
+			ctx->Unprepare();
+
+			sman.getEngine()->ReturnContext(ctx);
+		}
+
+		sman.unload(mScriptModule->GetName());
+	}
 	mScriptModule = nullptr;
 
 	mFileData.clear();
@@ -277,7 +307,7 @@ void Level::clearLevel()
 
 void Level::resetLevel()
 {
-	if (mLoaded.empty())
+	if (mPristineBitmap.empty() || mPristineObjects.empty())
 	{
 		std::cout << "Tried to reset level, but is not loaded." << std::endl << std::endl
 			<< "Why are you trying to crash the game? :'(" << std::endl;
@@ -291,6 +321,7 @@ void Level::resetLevel()
 
 	mBitmap = mPristineBitmap;
 	mPlayer = nullptr;
+	mDirty = true;
 
 	for (auto& it : mEntities)
 		it->release();
@@ -302,7 +333,7 @@ void Level::resetLevel()
 		Entity* ent;
 		if (it.Type == OnDisk::ObjDef::Type_Script)
 		{
-			if (!sman.hasLoaded(it.FileName))
+			if (!sman.isLoaded(it.FileName))
 			{
 				if (hasFile(it.FileName))
 				{
@@ -318,22 +349,32 @@ void Level::resetLevel()
 		else
 			ent = Entity::createFromType(it.ObjectName);
 
-		ent->deserialize(it.Serialized.c_str(), it.Serialized.size());
+		ent->deserialize(it.Serialized);
 
-		ent->setPosition(it.X * mScale * 1.5f, it.Y * mScale * 1.5f);
+		ent->setPosition(it.X * mScale + mScale / 2.f, it.Y * mScale + mScale / 2.f);
 		ent->setRotation(it.Dir * 90);
 
-		if (ent->getName() == "Player")
-			mPlayer = (Robot*)ent;
-
 		addEntity(ent);
+	}
+
+	if (mScriptModule)
+	{
+		auto* fun = mScriptModule->GetFunctionByDecl("void OnReset()");
+		if (fun)
+		{
+			auto* ctx = sman.getEngine()->RequestContext();
+
+			ctx->Prepare(fun);
+			ctx->Execute();
+			ctx->Unprepare();
+
+			sman.getEngine()->ReturnContext(ctx);
+		}
 	}
 }
 
 bool Level::loadFromFile(const std::string& file)
 {
-	clearLevel();
-
 	std::ifstream ifs(file.c_str());
 	if (!ifs)
 		return false;
@@ -345,17 +386,12 @@ bool Level::loadFromFile(const std::string& file)
 	std::vector<char> data(len);
 	ifs.read(&data[0], len);
 
-	if (loadFromMemory(&data[0], len))
-	{
-		mLoaded = file;
-		return true;
-	}
-	return false;
+	File reader(data.data(), len);
+
+	return loadFromStream(reader);
 }
 bool Level::loadFromMemory(const void* data, size_t len)
 {
-	clearLevel();
-
 	if (!mEngine)
 		return false;
 
@@ -363,6 +399,12 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		return false;
 
 	File reader((const char*)data, len);
+	return loadFromStream(reader);
+}
+bool Level::loadFromStream(sf::InputStream& reader)
+{
+	if (reader.getSize() < sizeof(OnDisk::Version) + sizeof(OnDisk::Header))
+		return false;
 
 	OnDisk::Version version = {};
 	reader.read(&version, sizeof(OnDisk::Version));
@@ -381,14 +423,14 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		(lvlHeader.Rows * sizeof(OnDisk::Row)) +
 		(lvlHeader.ObjCount * sizeof(OnDisk::ObjDef)) +
 		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile))
-	);
+		);
 
-	if (len < minSize)
+	if (reader.getSize() < minSize)
 		return false;
 
-	std::string levelScriptName('\0', lvlHeader.ScriptNameLength);
+	std::string levelScriptName(lvlHeader.ScriptNameLength, 0);
 	reader.read(&levelScriptName[0], lvlHeader.ScriptNameLength);
-	std::string levelScriptData('\0', lvlHeader.ScriptDataLength);
+	std::string levelScriptData(lvlHeader.ScriptDataLength, 0);
 	reader.read(&levelScriptData[0], lvlHeader.ScriptDataLength);
 
 	std::vector<OnDisk::Row> rows(lvlHeader.Rows);
@@ -411,18 +453,18 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		if (def.Type == OnDisk::ObjDef::Type_Script)
 		{
 			it.FileName.resize(def.Script.ScriptLength, 0);
-			reader.read(&it.FileName, def.Script.ScriptLength);
+			reader.read(&it.FileName[0], def.Script.ScriptLength);
 			it.ObjectName.resize(def.Script.ObjectNameLength, 0);
-			reader.read(&it.ObjectName, def.Script.ObjectNameLength);
+			reader.read(&it.ObjectName[0], def.Script.ObjectNameLength);
 		}
 		else
 		{
 			it.ObjectName.resize(def.Default.NameLength, 0);
-			reader.read(&it.ObjectName, def.Default.NameLength);
+			reader.read(&it.ObjectName[0], def.Default.NameLength);
 		}
 
 		it.Serialized.resize(def.SerializedDataLength, 0);
-		reader.read(&it.Serialized, def.SerializedDataLength);
+		reader.read(&it.Serialized[0], def.SerializedDataLength);
 	}
 
 	std::unordered_map<std::string, std::vector<char>> fileData;
@@ -431,78 +473,76 @@ bool Level::loadFromMemory(const void* data, size_t len)
 		OnDisk::ContainedFile file = {};
 		reader.read((char*)&file, sizeof(OnDisk::ContainedFile));
 
-		std::string name('\0', file.NameLength);
+		std::string name(file.NameLength, 0);
 		reader.read(&name[0], file.NameLength);
 
-		auto& dataStore = fileData[name];
+		auto& dataStore = fileData[std::move(name)];
 		dataStore.resize(file.FileSize);
 
 		if (reader.read(&dataStore[0], file.FileSize) != file.FileSize)
 			return false;
 	}
-	
-	if (lvlHeader.Flipped)
+
+	clearLevel();
+
+	if (lvlHeader.Flags & OnDisk::Header::Flag_Flipped)
 	{
 		mSize.x = lvlHeader.Rows;
 		mSize.y = lvlHeader.Cols;
+
+		mFlipped = true;
 	}
 	else
 	{
 		mSize.y = lvlHeader.Rows;
 		mSize.x = lvlHeader.Cols;
+
+		mFlipped = false;
 	}
-	mFlipped = lvlHeader.Flipped;
 	mScale = lvlHeader.Scale;
-	mBitmap = rows;
 	mOutside = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
 	mBackground = sf::Color(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
 	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
 
 	mFileData = std::move(fileData);
 
-	if (!levelScriptName.empty())
-	{
-		if (!sman.hasLoaded(levelScriptName))
-		{
-			if (hasFile(levelScriptName))
-			{
-				auto file = getContained(levelScriptName);
-				sman.loadFromStream(levelScriptName, file);
-			}
-			else
-				sman.loadFromFile(levelScriptName);
-		}
-
-		auto* eng = sman.getEngine();
-		auto* mod = eng->GetModule(levelScriptName.c_str());
-		asIScriptFunction* func = mod->GetFunctionByDecl("void OnLoad()");
-		if (func)
-		{
-			auto* ctx = eng->RequestContext();
-			ctx->Prepare(func);
-
-			ctx->Execute();
-
-			eng->ReturnContext(ctx);
-		}
-	}
-
 	mPristineObjects = std::move(objs);
 	mPristineBitmap = std::move(rows);
 
 	resetLevel();
 
+	mScriptName = std::move(levelScriptName);
+	if (!mScriptName.empty())
+	{
+		if (!sman.isLoaded(mScriptName))
+		{
+			if (hasFile(mScriptName))
+			{
+				auto file = getContained(mScriptName);
+				sman.loadFromStream(mScriptName, file);
+			}
+			else
+				sman.loadFromFile(mScriptName);
+		}
+
+		auto* eng = sman.getEngine();
+		auto* mod = eng->GetModule(mScriptName.c_str());
+		asIScriptFunction* func = mod->GetFunctionByDecl("void OnLoad(const string&in)");
+		if (func)
+		{
+			auto* ctx = eng->RequestContext();
+			ctx->Prepare(func);
+			ctx->SetArgObject(0, &levelScriptData);
+
+			ctx->Execute();
+
+			eng->ReturnContext(ctx);
+		}
+
+		mScriptModule = mod;
+	}
+
 	return true;
-}
-bool Level::loadFromStream(sf::InputStream& file)
-{
-	clearLevel();
-
-	size_t len = size_t(file.getSize());
-	std::vector<char> data(len);
-	file.read(&data[0], len);
-
-	return loadFromMemory(&data[0], len);
 }
 
 bool Level::saveToFile(const std::string& file) const
@@ -515,7 +555,7 @@ bool Level::saveToFile(const std::string& file) const
 	OnDisk::Header head{};
 	if (mSize.x > sizeof(RowWidth) * 8)
 	{
-		head.Flipped = true;
+		head.Flags |= OnDisk::Header::Flag_Flipped;
 		head.Rows = mSize.x;
 		head.Cols = mSize.y;
 	}
@@ -535,96 +575,84 @@ bool Level::saveToFile(const std::string& file) const
 	head.ForegroundColor = mForeground.toInteger() >> 8;
 	head.ObjCount = mEntities.size();
 
+	std::string scriptData;
 	if (mScriptModule)
 	{
 		auto* eng = mEngine->get<ScriptManager>().getEngine();
-		asIScriptFunction* func = mScriptModule->GetFunctionByDecl("void OnSave()");
+		asIScriptFunction* func = mScriptModule->GetFunctionByDecl("string OnSave()");
 		if (func)
 		{
 			auto* ctx = eng->RequestContext();
 			ctx->Prepare(func);
 
 			ctx->Execute();
+			scriptData = *(std::string*)ctx->GetReturnObject();
 
 			eng->ReturnContext(ctx);
 		}
-
-		std::string name = mScriptModule->GetName();
-		std::copy_n(name.c_str(), name.size(), head.ScriptFile);
 	}
 
+	head.ScriptNameLength = mScriptName.length();
+	head.ScriptDataLength = scriptData.length();
+
 	ofs.write((const char*)&head, sizeof(OnDisk::Header));
-	OnDisk::PlayerObj player = {};
+	ofs.write(mScriptName.c_str(), mScriptName.length());
+	ofs.write(scriptData.c_str(), scriptData.length());
 
-	auto pos = mPlayer.getPosition() / mScale;
-	player.PosX = uint8_t(pos.x);
-	player.PosY = uint8_t(pos.y);
-	float ang = mPlayer.getRotation();
-	while (ang < 0)
-		ang += 360;
-	player.Dir = uint8_t(ang / 90) % 4;
-
-	std::string name = mPlayer.getProgram()->getName();
-	std::copy_n(name.c_str(), name.size(), player.Programming);
-
-	ofs.write((const char*)&player, sizeof(OnDisk::PlayerObj));
 	if (!mBitmap.empty())
 		ofs.write((const char*)&mBitmap[0], sizeof(OnDisk::Row) * head.Rows);
 
-	std::vector<OnDisk::ObjDef> objs(head.ObjCount);
-	int i = 0;
 	for (auto& ent : mEntities)
 	{
-		auto& o = objs[i++];
+		OnDisk::ObjDef o = {};
 		
 		auto pos = ent->getPosition() / mScale;
 		o.PosX = uint8_t(pos.x);
 		o.PosY = uint8_t(pos.y);
 		float ang = ent->getRotation();
-		while (ang < 360)
+		while (ang < 0)
 			ang += 360;
 		o.Dir =	uint8_t(ang / 90) % 4;
+
+		std::string objectName;
+		std::string scriptName;
 
 		o.Type = ent->isScriptEntity();
 		if (ent->isScriptEntity())
 		{
-			std::string name = ent->getScriptObject()->GetObjectType()->GetModule()->GetName();
-			std::copy_n(name.c_str(), name.size(), o.Script.ScriptFile);
-			name = ent->getScriptObject()->GetObjectType()->GetName();
-			std::copy_n(name.c_str(), name.size(), o.Script.ScriptObject);
+			scriptName = ent->getScriptObject()->GetObjectType()->GetModule()->GetName();
+			o.Script.ScriptLength = scriptName.length();
+			objectName = ent->getScriptObject()->GetObjectType()->GetName();
+			o.Script.ObjectNameLength = objectName.length();
 		}
 		else
 		{
-			std::string name = ent->getName();
-			std::copy_n(name.c_str(), name.size(), o.Default.ObjType);
+			objectName = ent->getName();
+			o.Default.NameLength = objectName.length();
 		}
 
-		ent->serialize(o.ObjectData, sizeof(o.ObjectData));
-	}
-	if (!objs.empty())
-		ofs.write((const char*)&objs[0], sizeof(OnDisk::ObjDef) * objs.size());
+		std::string data = ent->serialize();
+		o.SerializedDataLength = data.length();
 
-	std::vector<OnDisk::ContainedFile> files(head.ContainedFiles);
-	i = 0;
+		ofs.write((const char*)&o, sizeof(OnDisk::ObjDef));
+		if (o.Type == OnDisk::ObjDef::Type_Script)
+			ofs.write(scriptName.c_str(), scriptName.length());
+		ofs.write(objectName.c_str(), objectName.length());
+		ofs.write(data.c_str(), data.length());
+	}
+
 	for (auto& fileData : mFileData)
 	{
 		if (fileData.second.size() > UINT16_MAX)
 			return false;
 
-		auto& f = files[i++];
+		OnDisk::ContainedFile f = {};
 		f.FileSize = uint16_t(fileData.second.size());
+		f.NameLength = fileData.first.length();
 
-		std::copy_n(fileData.first.c_str(), fileData.first.size(), f.FileName);
-	}
-
-	if (!files.empty())
-	{
-		if (!ofs.write((const char*)&files[0], files.size() * sizeof(OnDisk::ContainedFile)))
-			return false;
-
-		for (auto& fileData : mFileData)
-			if (!ofs.write(&fileData.second[0], fileData.second.size()))
-				return false;
+		ofs.write((const char*)&f, sizeof(OnDisk::ContainedFile));
+		ofs.write(fileData.first.c_str(), fileData.first.length());
+		ofs.write(fileData.second.data(), fileData.second.size());
 	}
 
 	return true;
@@ -762,11 +790,11 @@ void Level::setForegroundColor(const sf::Color& col)
 	mForeground = col;
 }
 
-Robot& Level::getPlayer()
+Robot* Level::getPlayer()
 {
 	return mPlayer;
 }
-const Robot& Level::getPlayer() const
+const Robot* Level::getPlayer() const
 {
 	return mPlayer;
 }
@@ -778,7 +806,7 @@ bool Level::findEntities(std::list<Entity*>& out, const Entity& source)
 	bool found = false;
 	for (auto& it : mEntities)
 	{
-		if (&it == &source)
+		if (it == &source)
 			continue;
 
 		auto& epos = it->getPosition();
@@ -796,6 +824,9 @@ void Level::addEntity(Entity* ent)
 {
 	ent->setLevel(this);
 	ent->initialize();
+
+	if (ent->getName() == "Player")
+		mPlayer = (Robot*)ent;
 
 	mEntities.push_back(ent);
 }
@@ -858,9 +889,11 @@ const asIScriptModule* Level::getScriptModule() const
 {
 	return mScriptModule;
 }
-void Level::setScriptModule(asIScriptModule* mod)
+const std::string& Level::getLevelScriptName() const
 {
-	if (mScriptModule)
-		mScriptModule->Discard();
-	mScriptModule = mod;
+	return mScriptName;
+}
+void Level::setLevelScriptName(const std::string& name)
+{
+	mScriptName = name;
 }
