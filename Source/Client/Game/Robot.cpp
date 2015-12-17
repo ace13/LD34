@@ -132,21 +132,10 @@ void Robot::tick(const Timespan& span)
 				sf::Vector2f pushVec;
 				if (test->getPenetration(getPosition(), getRadius(), pushVec))
 				{
-					//dist -= getRadius() + (test->getRadius() / 2);
+					pushVec /= 2.f;
 
-					if (std::abs(mState.Speed) > 0.5)
-					{
-						pushVec /= 2.f;
-
-						test->push(pushVec);
-					}
-
-//					float rot = getRotation();
-//					setRotation(0);
-
+					test->push(pushVec);
 					move(pushVec * -1.f);
-
-//					setRotation(rot);
 				}
 			}
 			else if (it->getName() == "Pit")
@@ -255,16 +244,4 @@ void Robot::initialize()
 
 	if (!mExplodeSound)
 		mExplodeSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
-}
-
-void Robot::reset()
-{
-	mTick = 0;
-	mKeyCount = 0;
-
-	mCurProgram = nullptr;
-	mState = {};
-	mTargetState = {};
-
-	sf::Transformable();
 }

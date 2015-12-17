@@ -30,7 +30,7 @@ void Box::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	states.transform *= getTransform();
 
-	float scale = getRadius();
+	float scale = getRadius() / 2.5;
 
 	sf::RectangleShape shape({
 		scale * 2, scale * 2
@@ -79,7 +79,7 @@ bool Box::deserialize(const char* data, size_t size)
 
 void Box::initialize()
 {
-	setRadius(getLevel()->getScale() / 2.5);
+	setRadius(getLevel()->getScale());
 }
 
 const std::string& Box::getName() const
@@ -90,11 +90,13 @@ const std::string& Box::getName() const
 
 bool Box::getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& out)
 {
+	float scale = getRadius() / 2.5;
+
 	sf::FloatRect aabb{
-		getPosition().x-getRadius(),
-		getPosition().y-getRadius(),
-		getRadius()*2,
-		getRadius()*2
+		getPosition().x - scale,
+		getPosition().y - scale,
+		scale * 2,
+		scale * 2
 	};
 
 	sf::Vector2f closest{
@@ -148,7 +150,7 @@ void Box::push(const sf::Vector2f& amount)
 
 				float dist = Math::Length(getPosition() - pit->getPosition());
 
-				if (dist < (getRadius()/2 + pit->getRadius() / 2))
+				if (dist < (getRadius() / 2.5 + pit->getRadius() / 2))
 				{
 					pit->fill();
 
