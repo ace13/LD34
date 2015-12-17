@@ -1,6 +1,8 @@
-void OnLoad()
+NextLoad@ l;
+
+void OnLoad(const string&in)
 {
-	NextLoad();
+	@l = NextLoad();
 }
 
 class NextLoad

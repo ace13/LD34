@@ -1,6 +1,8 @@
-void OnLoad()
+UI@ t;
+
+void OnLoad(const string&in)
 {
-	UI();
+	@t = UI();
 }
 
 class UI
