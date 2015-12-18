@@ -38,8 +38,15 @@ void Key::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(key, states);
 }
 
-bool Key::serialize(char* data, size_t size) const { return true; }
-bool Key::deserialize(const char* data, size_t size) { return true; }
+std::string Key::serialize() const
+{
+	return "";
+}
+bool Key::deserialize(const std::string&)
+{
+	return true;
+}
+
 void Key::initialize() 
 {
 	if (!mKeyTexture)
@@ -48,6 +55,10 @@ void Key::initialize()
 		mKeySound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("key.wav");
 }
 
+const std::type_info& Key::getType() const
+{
+	return typeid(Key);
+}
 const std::string& Key::getName() const
 {
 	static const std::string name = "Key";

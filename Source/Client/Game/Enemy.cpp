@@ -99,18 +99,37 @@ void Enemy::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-bool Enemy::serialize(char* data, size_t size) const
+std::string Enemy::serialize() const
 {
-	return true;
+	std::string ret = "01234";
+	ret[0] = mCurState;
+
+	if (mCurState == State_Turning)
+		std::memcpy(&ret[1], &mTargetAng, sizeof(float));
+
+	return ret;
 }
-bool Enemy::deserialize(const char* data, size_t size)
+bool Enemy::deserialize(const std::string& data)
 {
+	if (data.length() >= 0)
+	{
+		mCurState = State(data[0]);
+
+		if (mCurState == State_Turning)
+			std::memcpy(&mTargetAng, &data[1], sizeof(float));
+	}
+
 	return true;
 }
 
 void Enemy::initialize()
 {
 
+}
+
+const std::type_info& Enemy::getType() const
+{
+	return typeid(Enemy);
 }
 
 const std::string& Enemy::getName() const

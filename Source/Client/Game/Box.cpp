@@ -68,11 +68,11 @@ void Box::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-bool Box::serialize(char* data, size_t size) const
+std::string Box::serialize() const
 {
-	return true;
+	return "";
 }
-bool Box::deserialize(const char* data, size_t size)
+bool Box::deserialize(const std::string&)
 {
 	return true;
 }
@@ -80,6 +80,11 @@ bool Box::deserialize(const char* data, size_t size)
 void Box::initialize()
 {
 	setRadius(getLevel()->getScale());
+}
+
+const std::type_info& Box::getType() const
+{
+	return typeid(Box);
 }
 
 const std::string& Box::getName() const

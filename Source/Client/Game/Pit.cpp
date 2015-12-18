@@ -64,11 +64,11 @@ void Pit::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-bool Pit::serialize(char* data, size_t size) const
+std::string Pit::serialize() const
 {
-	return true;
+	return "";
 }
-bool Pit::deserialize(const char* data, size_t size)
+bool Pit::deserialize(const std::string& str)
 {
 	return true;
 }
@@ -76,6 +76,11 @@ bool Pit::deserialize(const char* data, size_t size)
 void Pit::initialize()
 {
 	setRadius(getLevel()->getScale() / 2);
+}
+
+const std::type_info& Pit::getType() const
+{
+	return typeid(Pit);
 }
 
 const std::string& Pit::getName() const

@@ -189,17 +189,45 @@ void Robot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
+void Robot::initialize()
+{
+	mTargetState.Speed = 0;
+	mTargetState.Angle = getRotation() * Math::DEG2RAD;
+	mState = mTargetState;
+
+	if (!mExplodeSound)
+		mExplodeSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
+}
+
 std::string Robot::serialize() const
 {
-	return mCurProgram->getName();
+	auto name = mCurProgram->getName();
+	std::string ret(name.length() + 1 + sizeof(State) * 2, '\0');
+
+	std::memcpy(&ret[0], name.data(), name.length());
+	std::memcpy(&ret[1 + name.length()], &mState, sizeof(State));
+	std::memcpy(&ret[1 + name.length() + sizeof(State)], &mTargetState, sizeof(State));
+
+	return ret;
 }
 bool Robot::deserialize(const std::string& str)
 {
-	mCurProgram = Program::createProgramming(str);
+	if (str.length() > 0)
+	{
+		mCurProgram = Program::createProgramming(str.c_str());
+		auto name = mCurProgram->getName();
 
-	return mCurProgram != nullptr;
+		std::memcpy(&mState, &str[1 + name.length()], sizeof(State));
+		std::memcpy(&mTargetState, &str[1 + name.length() + sizeof(State)], sizeof(State));
+	}
+
+	return true;
 }
 
+const std::type_info& Robot::getType() const
+{
+	return typeid(Robot);
+}
 const std::string& Robot::getName() const
 {
 	static const std::string name = "Player";
@@ -234,14 +262,4 @@ void Robot::setSpeed(float speed)
 void Robot::turn(float amount)
 {
 	mTargetState.Angle = mTargetState.Angle + amount;
-}
-
-void Robot::initialize()
-{
-	mTargetState.Speed = 0;
-	mTargetState.Angle = getRotation() * Math::DEG2RAD;
-	mState = mTargetState;
-
-	if (!mExplodeSound)
-		mExplodeSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
 }

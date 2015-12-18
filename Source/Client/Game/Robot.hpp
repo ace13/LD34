@@ -29,6 +29,9 @@ public:
 	virtual std::string serialize() const;
 	virtual bool deserialize(const std::string&);
 
+	virtual void initialize();
+
+	virtual const std::type_info& getType() const;
 	virtual const std::string& getName() const;
 
 	bool execute(const std::string& command);
@@ -38,8 +41,6 @@ public:
 
 	void setSpeed(float speed);
 	void turn(float amount);
-
-	void initialize();
 
 private:
 	struct State

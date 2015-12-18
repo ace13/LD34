@@ -8,10 +8,7 @@
 
 #include <string>
 
-class asILockableSharedBool;
-class asIScriptModule;
-class asIScriptObject;
-class asIScriptFunction;
+class Engine;
 class ScriptManager;
 class ParticleManager;
 class Level;
@@ -22,60 +19,59 @@ public:
 	Entity();
 	virtual ~Entity();
 
-	virtual void tick(const Timespan& dt);
-	virtual void update(const Timespan& dt);
-	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+	virtual void tick(const Timespan& dt) = 0;
+	virtual void update(const Timespan& dt) = 0;
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
 
-	void move(const sf::Vector2f&);
+	virtual std::string serialize() const = 0;
+	virtual bool deserialize(const std::string&) = 0;
 
-	virtual std::string serialize() const;
-	virtual bool deserialize(const std::string&);
+	virtual void initialize() = 0;
 
-	virtual const std::string& getName() const;
-	virtual bool isScriptEntity() const;
+	virtual const std::type_info& getType() const = 0;
+	virtual const std::string& getName() const = 0;
 	virtual bool isGoal() const;
 	virtual bool isCompleted() const;
 
-	virtual void initialize();
 
+	// Overridden transformable functions
+	void move(float, float);
+	void move(const sf::Vector2f&);
+
+	// Ref counting
 	int addRef();
 	int release();
 
-	static void registerType(ScriptManager&);
-	static bool preLoadInject(asIScriptModule* mod);
-
+	// Entity features
 	float getRadius() const;
 	void setRadius(float);
 
 	const ParticleManager* getParticleManager(bool post = false) const;
 	ParticleManager* getParticleManager(bool post=false);
 
+	const Engine* getEngine() const;
+	Engine* getEngine();
+
 	const Level* getLevel() const;
 	Level* getLevel();
-	void setLevel(Level*);
-	const asIScriptObject* getScriptObject() const;
 
 	static Entity* createFromType(const std::string& name);
-	static Entity* createForScript(asIScriptModule* module, const std::string& type);
 
 protected:
 	void setGoal(bool isGoal = true);
 	void setCompleted(bool completed = true);
 
-	void setScriptObject(asIScriptObject* obj);
-
 private:
-	static Entity* createFromScript();
+	void setLevel(Level*);
 
 	std::string mName;
 
 	Level* mLevel;
-	asILockableSharedBool* mScript;
-	asIScriptObject* mObject;
-	asIScriptFunction *mTick, *mUpdate, *mDraw;
 
 	bool mIsGoal, mIsCompleted;
 	float mRadius;
 
 	int mRefCount;
+
+	friend class Level;
 };

@@ -4,7 +4,7 @@
 
 #include "Level.hpp"
 #include "Entity.hpp"
-#include "Program.hpp"
+#include "ScriptEntity.hpp"
 
 #include "../ParticleManager.hpp"
 
@@ -344,7 +344,7 @@ void Level::resetLevel()
 					sman.loadFromFile(it.FileName);
 			}
 
-			ent = Entity::createForScript(sman.getEngine()->GetModule(it.FileName.c_str()), it.ObjectName.c_str());
+			ent = ScriptEntity::createForScript(sman.getEngine()->GetModule(it.FileName.c_str()), it.ObjectName.c_str());
 		}
 		else
 			ent = Entity::createFromType(it.ObjectName);
@@ -352,7 +352,7 @@ void Level::resetLevel()
 		ent->deserialize(it.Serialized);
 
 		ent->setPosition(it.X * mScale + mScale / 2.f, it.Y * mScale + mScale / 2.f);
-		ent->setRotation(it.Dir * 90);
+		ent->setRotation(it.Dir * 90.f);
 
 		addEntity(ent);
 	}
@@ -617,12 +617,13 @@ bool Level::saveToFile(const std::string& file) const
 		std::string objectName;
 		std::string scriptName;
 
-		o.Type = ent->isScriptEntity();
-		if (ent->isScriptEntity())
+		o.Type = ent->getType() == typeid(ScriptEntity);
+		if (o.Type)
 		{
-			scriptName = ent->getScriptObject()->GetObjectType()->GetModule()->GetName();
+			auto* sent = reinterpret_cast<ScriptEntity*>(ent);
+			scriptName = sent->getScriptObject()->GetObjectType()->GetModule()->GetName();
 			o.Script.ScriptLength = scriptName.length();
-			objectName = ent->getScriptObject()->GetObjectType()->GetName();
+			objectName = sent->getScriptObject()->GetObjectType()->GetName();
 			o.Script.ObjectNameLength = objectName.length();
 		}
 		else

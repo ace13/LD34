@@ -16,6 +16,8 @@ SET(HEADERS
 	Game/Pit.hpp
 	Game/Program.hpp
 	Game/Robot.hpp
+	Game/ScriptEntity.hpp
+	Game/ScriptProgram.hpp
 
 	Menus/MenuPage.hpp
 	Menus/InfoMenu.hpp
@@ -45,6 +47,8 @@ SET(SOURCES
 	Game/Pit.cpp
 	Game/Program.cpp
 	Game/Robot.cpp
+	Game/ScriptEntity.cpp
+	Game/ScriptProgram.cpp
 
 	Menus/MenuPage.cpp
 	Menus/InfoMenu.cpp

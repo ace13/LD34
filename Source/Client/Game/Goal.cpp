@@ -60,12 +60,15 @@ void Goal::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
-bool Goal::serialize(char* data, size_t size) const
+std::string Goal::serialize() const
 {
-	return true;
+	return isCompleted() ? "C": "U";
 }
-bool Goal::deserialize(const char* data, size_t size)
+bool Goal::deserialize(const std::string& data)
 {
+	if (data.length() > 0)
+		setCompleted(data[0] == 'C');
+
 	return true;
 }
 
@@ -74,6 +77,10 @@ void Goal::initialize()
 	mGoalSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("goal.wav");
 }
 
+const std::type_info& Goal::getType() const
+{
+	return typeid(Goal);
+}
 const std::string& Goal::getName() const
 {
 	static const std::string name = "Goal";

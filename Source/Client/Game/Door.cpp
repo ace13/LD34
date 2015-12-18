@@ -74,17 +74,35 @@ void Door::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-bool Door::serialize(char* data, size_t size) const { return true; }
-bool Door::deserialize(const char* data, size_t size) { return true; }
+std::string Door::serialize() const
+{
+	return (mOpen ? "O" : "C");
+}
+bool Door::deserialize(const std::string& s)
+{
+	if (s.length() > 0)
+		mOpen = s[0] == 'O';
+
+	return true;
+}
 
 void Door::initialize()
 {
 	setRadius(getLevel()->getScale());
-	auto lpos = getPosition() / getLevel()->getScale();
-	getLevel()->setBlocked(uint8_t(lpos.x), uint8_t(lpos.y));
+
+	if (!mOpen)
+	{
+		auto lpos = getPosition() / getLevel()->getScale();
+		getLevel()->setBlocked(uint8_t(lpos.x), uint8_t(lpos.y));
+	}
 
 	if (!mDoorSound)
 		mDoorSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("door.wav");
+}
+
+const std::type_info& Door::getType() const
+{
+	return typeid(Door);
 }
 
 const std::string& Door::getName() const

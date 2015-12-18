@@ -6,6 +6,7 @@
 #include "../Game/Entity.hpp"
 #include "../Game/Goal.hpp"
 #include "../Game/Program.hpp"
+#include "../Game/ScriptEntity.hpp"
 
 #include <Core/Engine.hpp>
 #include <Core/FileWatcher.hpp>
@@ -193,7 +194,7 @@ namespace
 		unsigned int height = std::count(str.begin(), str.end(), '\n');
 		unsigned int width = str.find('\n');
 
-		level.setScale(150);
+		level.setScale(150.f);
 		level.setSize({
 			width,
 			height
@@ -217,28 +218,28 @@ namespace
 			case 'B':
 			{
 				Entity* ent = Entity::createFromType("Box");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 			} break;
 
 			case 'W':
 			{
 				Entity* ent = Entity::createFromType("Pit");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 			} break;
 
 			case 'K':
 			{
 				Entity* ent = Entity::createFromType("Key");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 			} break;
 
 			case 'D':
 			{
 				Entity* ent = Entity::createFromType("Door");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 				level.setBlocked(x, y);
 			} break;
@@ -246,58 +247,58 @@ namespace
 			case 'G':
 			{
 				Entity* ent = Entity::createFromType("Goal");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 			} break;
 
 			case '>': {
 				Entity* ent = Entity::createFromType("Player");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 			} break;
 			case 'V': {
 				Entity* ent = Entity::createFromType("Player");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				ent->setRotation(90);
 				level.addEntity(ent);
 			} break;
 			case '<': {
 				Entity* ent = Entity::createFromType("Player");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				ent->setRotation(180);
 				level.addEntity(ent);
 			} break;
 			case '^': {
 				Entity* ent = Entity::createFromType("Player");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				ent->setRotation(270);
 				level.addEntity(ent);
 			} break;
 
 			case 'U': {
 				Entity* ent = Entity::createFromType("BasicEnemy");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				ent->setRotation(-90);
 				level.addEntity(ent);
 			} break;
 
 			case 'N': {
 				Entity* ent = Entity::createFromType("BasicEnemy");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				ent->setRotation(90);
 				level.addEntity(ent);
 			} break;
 
 			case 'L': {
 				Entity* ent = Entity::createFromType("BasicEnemy");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				ent->setRotation(180);
 				level.addEntity(ent);
 			} break;
 
 			case 'R': {
 				Entity* ent = Entity::createFromType("BasicEnemy");
-				ent->setPosition(x * 150 + 75, y * 150 + 75);
+				ent->setPosition(x * 150.f + 75.f, y * 150.f + 75.f);
 				level.addEntity(ent);
 			} break;
 
@@ -328,7 +329,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	mRT = rt;
 
 	sf::View tmp = mRT->getView();
-	tmp.zoom(0.4);
+	tmp.zoom(0.4f);
 	mRT->setView(tmp);
 
 	mLevel.setEngine(&getEngine());
@@ -344,7 +345,7 @@ void GameState::enter(sf::RenderTarget* rt)
 	sman.getEngine()->RegisterGlobalFunction("void LoadLevel(const string&in)", asMETHOD(GameState, loadLevel), asCALL_THISCALL_ASGLOBAL, this);
 	sman.registerHook("OnCommand", "void f(const string&in, const string&in)");
 	sman.registerHook("OnLevelEnd", "void f()");
-	sman.addPreLoadCallback("ScriptEntity",Entity::preLoadInject);
+	sman.addPreLoadCallback("ScriptEntity", ScriptEntity::preLoadInject);
 	sman.getEngine()->SetUserData(&mLevel, 0x1EE7);
 
 	FileWatcher::recurseDirectory("Game", mScripts, "*.as");
@@ -354,9 +355,9 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	bakeLevels(mLevel);
+	//bakeLevels(mLevel);
 	
-	loadLevel("Level3.lvl");
+	loadLevel("Tutorial1.lvl");
 }
 void GameState::exit(sf::RenderTarget*)
 {
@@ -483,7 +484,7 @@ void GameState::draw(sf::RenderTarget& target)
 	if (mEnded)
 	{
 		view.zoom(5 / (mEndTimeout * 2));
-		view.rotate((5- (mEndTimeout * 2)) * 22.5);
+		view.rotate((5- (mEndTimeout * 2)) * 22.5f);
 	}
 
 	target.setView(view);
