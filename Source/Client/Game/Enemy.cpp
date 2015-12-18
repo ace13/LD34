@@ -8,6 +8,8 @@
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 
+#include <cstring>
+
 namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
