@@ -9,7 +9,8 @@ class Robot;
 class Program
 {
 public:
-	virtual ~Program() { }
+	Program();
+	virtual ~Program();
 
 	virtual const std::string& getName() const = 0;
 
