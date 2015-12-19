@@ -91,6 +91,23 @@ namespace
 #pragma pack(pop)
 
 	static const OnDisk::Version FILE_VERSION = 4;
+
+#if SFML_VERSION_MINOR < 3
+	sf::Color ColorFromInt(uint32_t color) {
+		return sf::Color{
+			uint8_t((color & 0xff000000) >> 24),
+			uint8_t((color & 0x00ff0000) >> 16),
+			uint8_t((color & 0x0000ff00) >> 8),
+			uint8_t((color & 0x000000ff) >> 0)
+		};
+	}
+	uint32_t ColorToInt(const sf::Color& c) {
+		return (c.r << 24) | (c.g << 16) | (c.b << 8) | c.a;
+	}
+#else
+#define ColorFromInt sf::Color
+#define ColorToInt(a) a.toInteger()
+#endif
 }
 
 Level::File::File(const char* data, size_t size) :
@@ -500,9 +517,9 @@ bool Level::loadFromStream(sf::InputStream& reader)
 		mFlipped = false;
 	}
 	mScale = lvlHeader.Scale;
-	mOutside = sf::Color(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
-	mBackground = sf::Color(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
-	mForeground = sf::Color(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
+	mOutside = ColorFromInt(uint32_t(lvlHeader.OutsideColor) << 8 | 0xff);
+	mBackground = ColorFromInt(uint32_t(lvlHeader.BackgroundColor) << 8 | 0xff);
+	mForeground = ColorFromInt(uint32_t(lvlHeader.ForegroundColor) << 8 | 0xff);
 
 	mFileData = std::move(fileData);
 
@@ -570,9 +587,9 @@ bool Level::saveToFile(const std::string& file) const
 
 	head.Scale = mScale;
 	head.ContainedFiles = mFileData.size();
-	head.OutsideColor = mOutside.toInteger() >> 8;
-	head.BackgroundColor = mBackground.toInteger() >> 8;
-	head.ForegroundColor = mForeground.toInteger() >> 8;
+	head.OutsideColor = ColorToInt(mOutside) >> 8;
+	head.BackgroundColor = ColorToInt(mBackground) >> 8;
+	head.ForegroundColor = ColorToInt(mForeground) >> 8;
 	head.ObjCount = mEntities.size();
 
 	std::string scriptData;

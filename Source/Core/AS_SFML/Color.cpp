@@ -20,6 +20,27 @@ namespace
 
 namespace sf
 {
+#if SFML_VERSION_MINOR < 2
+	sf::Color operator-(const sf::Color& a, const sf::Color& b)
+	{
+		return{
+			a.r - b.r,
+			a.g - b.g,
+			a.b - b.b,
+			a.a - b.a
+		};
+	}
+	sf::Color& operator-=(sf::Color& a, const sf::Color& b)
+	{
+		a.r -= b.r;
+		a.g -= b.g;
+		a.b -= b.b;
+		a.a -= b.a;
+
+		return a;
+	}
+#endif
+
 	sf::Color operator*(const sf::Color& c, float i)
 	{
 		return{ uint8_t(c.r * i), uint8_t(c.g * i), uint8_t(c.b * i) };
