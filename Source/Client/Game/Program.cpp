@@ -5,8 +5,13 @@
 
 #include <iostream>
 
-Program::Program(const std::string& name) :
-	mName(name)
+
+Program::Program()
+{
+
+}
+
+Program::~Program()
 {
 
 }
@@ -20,11 +25,6 @@ bool Program::execute(const std::string& command, Robot& actor)
 	}
 
 	return false;
-}
-
-const std::string& Program::getName() const
-{
-	return mName;
 }
 
 const std::string& Program::getName(const std::string& opcode) const
@@ -58,7 +58,7 @@ void Program::eraseOpcode(const std::string& op)
 	mOpcodes.erase(op);
 }
 
-BaseProgram::BaseProgram() : Program("BaseProgramming")
+BaseProgram::BaseProgram()
 {
 	addOpcode("0", "STOP", [](Robot& r) { r.setSpeed(0); });
 	addOpcode("1", "FULL_FORWARD", [](Robot& r) { r.setSpeed(1); });
@@ -71,4 +71,10 @@ BaseProgram::BaseProgram() : Program("BaseProgramming")
 	addOpcode("011", "TURN_AROUND", [](Robot& r) { r.turn(Math::PI); });
 
 	addOpcode("1011", "MOONWALK", [](Robot& r) { r.turn(Math::PI * 2); r.setSpeed(-1); });
+}
+
+const std::string& BaseProgram::getName() const
+{
+	static const std::string name = "BaseProgram";
+	return name;
 }
