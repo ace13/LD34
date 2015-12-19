@@ -270,6 +270,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 	module = mEngine->GetModule(lower.c_str(), asGM_ALWAYS_CREATE);
 
+	// FIXME? Preload callbacks can not act on bytecode anyway
+	/*
 	if (type == Type_Bytecode)
 		for (auto& callback : mPreLoadCallbacks)
 			if (!callback.second(module))
@@ -278,6 +280,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 				return false;
 			}
+	*/
 
 	int r = module->LoadByteCode(&bcode);
 	if (r < 0)
