@@ -33,18 +33,21 @@ private:
 	};
 
 	template<class T>
-	struct RHelper<T, typename std::enable_if<std::is_member_function_pointer<decltype(&T::data)>::value>::type>
+	struct RHelper<T, typename std::enable_if<std::is_object<typename T::iterator>::value>::type>
 	{
 		static bool readT(InputStream* obj, T& out)
 		{
 			uint16_t size;
-			if (!obj->read(&size, sizeof(uint16_t)))
+			if (!obj->operator>>(size))
 				return false;
 
 			T temp;
 			temp.resize(size);
-			if (obj->read(&temp[0], size) != size)
-				return false;
+			for (auto& it : temp)
+			{
+				if (!obj->operator>>(it))
+					return false;
+			}
 
 			out = std::move(temp);
 			return true;

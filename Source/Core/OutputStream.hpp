@@ -38,14 +38,19 @@ private:
 	};
 
 	template<class T>
-	struct WHelper<T, typename std::enable_if<std::is_member_function_pointer<decltype(&T::data)>::value>::type>
+	struct WHelper<T, typename std::enable_if<std::is_object<typename T::iterator>::value>::type>
 	{
 		static bool writeT(OutputStream* obj, const T& in)
 		{
 			uint16_t size = uint16_t(in.size());
-			if (!obj->write(&size, sizeof(size)))
+			if (!obj->operator<<(size))
 				return false;
-			return obj->write(in.data(), size) == size;
+
+			for (auto& it : in)
+				if (!obj->operator<<(it))
+					return false;
+
+			return true;
 		}
 	};
 };
