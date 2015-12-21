@@ -125,8 +125,12 @@ void ScriptEntity::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
-std::string ScriptEntity::serialize() const
+bool ScriptEntity::serialize(OutputStream& stream) const
 {
+	return true;
+
+	// TODO: FIXME
+	/*
 	if (!mScript->Get())
 	{
 		auto* eng = mObject->GetEngine();
@@ -147,9 +151,13 @@ std::string ScriptEntity::serialize() const
 	}
 
 	return "";
+	*/
 }
-bool ScriptEntity::deserialize(const std::string& data)
+bool ScriptEntity::deserialize(InputStream& data)
 {
+	return true;
+	// TODO: FIXME
+	/*
 	if (!mScript->Get())
 	{
 		auto* eng = mObject->GetEngine();
@@ -171,6 +179,7 @@ bool ScriptEntity::deserialize(const std::string& data)
 	}
 
 	return true;
+	*/
 }
 
 void ScriptEntity::initialize()

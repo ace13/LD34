@@ -12,6 +12,7 @@
 
 #include <Core/Engine.hpp>
 #include <Core/Math.hpp>
+#include <Core/OutputStream.hpp>
 
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
@@ -201,29 +202,26 @@ void Robot::initialize()
 		mExplodeSound = getLevel()->getEngine()->get<ResourceManager>().get<sf::SoundBuffer>("explode.wav");
 }
 
-std::string Robot::serialize() const
+bool Robot::serialize(OutputStream& stream) const
 {
-	auto name = mCurProgram->getName();
-	std::string ret(name.length() + 1 + sizeof(State) * 2, '\0');
+	stream.reserve(mCurProgram->getName().length() + sizeof(int32_t) + sizeof(State)*2);
 
-	std::memcpy(&ret[0], name.data(), name.length());
-	std::memcpy(&ret[1 + name.length()], &mState, sizeof(State));
-	std::memcpy(&ret[1 + name.length() + sizeof(State)], &mTargetState, sizeof(State));
+	stream << mCurProgram->getName();
+	stream << mState << mTargetState;
 
-	return ret;
+	return stream;
 }
-bool Robot::deserialize(const std::string& str)
+bool Robot::deserialize(InputStream& stream)
 {
-	if (str.length() > 0)
+	std::string name;
+	if (stream >> name)
 	{
-		mCurProgram = Program::createProgramming(str.c_str());
-		auto name = mCurProgram->getName();
+		mCurProgram = Program::createProgramming(name.c_str());
 
-		std::memcpy(&mState, &str[1 + name.length()], sizeof(State));
-		std::memcpy(&mTargetState, &str[1 + name.length() + sizeof(State)], sizeof(State));
+		stream >> mState >> mTargetState;
 	}
 
-	return true;
+	return stream;
 }
 
 const std::type_info& Robot::getType() const

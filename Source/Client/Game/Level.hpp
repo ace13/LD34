@@ -2,6 +2,8 @@
 
 #include "Robot.hpp"
 
+#include <Core/InputStream.hpp>
+
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/System/InputStream.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -18,7 +20,7 @@ class asIScriptModule;
 class Level
 {
 public:
-	class File : public sf::InputStream
+	class File : public InputStream
 	{
 	public:
 		~File();
@@ -29,6 +31,8 @@ public:
 		sf::Int64 seek(sf::Int64 position);
 		sf::Int64 tell();
 		sf::Int64 getSize();
+
+		const char* getPtr() const;
 
 	private:
 		File(const char* data, size_t size);

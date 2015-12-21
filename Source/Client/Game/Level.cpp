@@ -10,6 +10,7 @@
 
 #include <Core/Engine.hpp>
 #include <Core/Math.hpp>
+#include <Core/OutputStream.hpp>
 #include <Core/ScriptManager.hpp>
 
 #include <SFML/Graphics/CircleShape.hpp>
@@ -90,6 +91,59 @@ namespace
 	};
 #pragma pack(pop)
 
+	class OutputFile : public OutputStream
+	{
+	public:
+		OutputFile() : mSetP(0), mReserved(0) { }
+
+		size_t getMaxSize() const
+		{
+			return mReserved;
+		}
+		size_t tell() const
+		{
+			return mSetP;
+		}
+		size_t write(const void* data, size_t len)
+		{
+			if (len == 0)
+				return 0;
+
+			if (mReserved - mSetP < len)
+				return 0;
+
+			std::copy((const char*)data, (const char*)data + len, &mData[mSetP]);
+			mSetP += len;
+
+			return len;
+		}
+		size_t seek(size_t pos)
+		{
+			if (mSetP + pos >= mReserved)
+				mSetP = mReserved - 1;
+			else
+				mSetP += pos;
+
+			return mSetP;
+		}
+
+		size_t reserve(size_t len)
+		{
+			mData.resize(len);
+			mReserved = len;
+			return len;
+		}
+
+		std::string str() const
+		{
+			return std::string(&mData[0], mSetP);
+		}
+
+	private:
+		size_t mSetP, mReserved;
+		std::vector<char> mData;
+	};
+
 	static const OnDisk::Version FILE_VERSION = 4;
 
 #if SFML_VERSION_MINOR < 3
@@ -151,6 +205,11 @@ sf::Int64 Level::File::tell()
 sf::Int64 Level::File::getSize()
 {
 	return mSize;
+}
+
+const char* Level::File::getPtr() const
+{
+	return mData;
 }
 
 Level::Level() :
@@ -366,7 +425,8 @@ void Level::resetLevel()
 		else
 			ent = Entity::createFromType(it.ObjectName);
 
-		ent->deserialize(it.Serialized);
+		File temp(it.Serialized.c_str(), it.Serialized.length());
+		ent->deserialize(temp);
 
 		ent->setPosition(it.X * mScale + mScale / 2.f, it.Y * mScale + mScale / 2.f);
 		ent->setRotation(it.Dir * 90.f);
@@ -649,14 +709,19 @@ bool Level::saveToFile(const std::string& file) const
 			o.Default.NameLength = objectName.length();
 		}
 
-		std::string data = ent->serialize();
-		o.SerializedDataLength = data.length();
+
+		OutputFile data;
+		if (ent->serialize(data))
+			o.SerializedDataLength = data.tell();
+		else
+			o.SerializedDataLength = 0;
 
 		ofs.write((const char*)&o, sizeof(OnDisk::ObjDef));
 		if (o.Type == OnDisk::ObjDef::Type_Script)
 			ofs.write(scriptName.c_str(), scriptName.length());
 		ofs.write(objectName.c_str(), objectName.length());
-		ofs.write(data.c_str(), data.length());
+		if (o.SerializedDataLength > 0)
+			ofs.write(data.str().c_str(), o.SerializedDataLength);
 	}
 
 	for (auto& fileData : mFileData)

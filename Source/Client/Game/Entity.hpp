@@ -9,6 +9,9 @@
 #include <string>
 
 class Engine;
+class InputStream;
+class OutputStream;
+
 class ScriptManager;
 class ParticleManager;
 class Level;
@@ -23,8 +26,8 @@ public:
 	virtual void update(const Timespan& dt) = 0;
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
 
-	virtual std::string serialize() const = 0;
-	virtual bool deserialize(const std::string&) = 0;
+	virtual bool serialize(OutputStream&) const = 0;
+	virtual bool deserialize(InputStream&) = 0;
 
 	virtual void initialize() = 0;
 

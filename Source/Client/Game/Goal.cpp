@@ -2,6 +2,8 @@
 #include "Level.hpp"
 
 #include <Core/Engine.hpp>
+#include <Core/InputStream.hpp>
+#include <Core/OutputStream.hpp>
 
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -60,16 +62,17 @@ void Goal::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
-std::string Goal::serialize() const
+bool Goal::serialize(OutputStream& stream) const
 {
-	return isCompleted() ? "C": "U";
+	stream.reserve(sizeof(bool));
+	return stream << isCompleted();
 }
-bool Goal::deserialize(const std::string& data)
+bool Goal::deserialize(InputStream& stream)
 {
-	if (data.length() > 0)
-		setCompleted(data[0] == 'C');
-
-	return true;
+	bool b;
+	if (stream >> b)
+		setCompleted(b);
+	return stream;
 }
 
 void Goal::initialize()

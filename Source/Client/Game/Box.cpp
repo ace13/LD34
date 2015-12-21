@@ -68,11 +68,11 @@ void Box::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-std::string Box::serialize() const
+bool Box::serialize(OutputStream&) const
 {
-	return "";
+	return true;
 }
-bool Box::deserialize(const std::string&)
+bool Box::deserialize(InputStream&)
 {
 	return true;
 }

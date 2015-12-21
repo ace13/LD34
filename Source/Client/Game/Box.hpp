@@ -12,8 +12,8 @@ public:
 	virtual void update(const Timespan& dt);
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
-	virtual std::string serialize() const;
-	virtual bool deserialize(const std::string&);
+	virtual bool serialize(OutputStream&) const;
+	virtual bool deserialize(InputStream&);
 
 	virtual void initialize();
 

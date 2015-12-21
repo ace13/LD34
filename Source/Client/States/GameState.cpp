@@ -355,7 +355,7 @@ void GameState::enter(sf::RenderTarget* rt)
 		sman.loadFromFile(script);
 	}
 
-	//bakeLevels(mLevel);
+	bakeLevels(mLevel);
 	
 	loadLevel("Tutorial1.lvl");
 }

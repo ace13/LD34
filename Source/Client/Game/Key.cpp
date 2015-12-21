@@ -1,5 +1,6 @@
 #include "Key.hpp"
 #include "Level.hpp"
+
 #include <Core/Engine.hpp>
 
 #include <SFML/Audio/SoundBuffer.hpp>
@@ -38,11 +39,11 @@ void Key::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(key, states);
 }
 
-std::string Key::serialize() const
+bool Key::serialize(OutputStream&) const
 {
-	return "";
+	return true;
 }
-bool Key::deserialize(const std::string&)
+bool Key::deserialize(InputStream&)
 {
 	return true;
 }

@@ -3,7 +3,9 @@
 
 #include "../ParticleManager.hpp"
 
+#include <Core/InputStream.hpp>
 #include <Core/Math.hpp>
+#include <Core/OutputStream.hpp>
 
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -101,27 +103,25 @@ void Enemy::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-std::string Enemy::serialize() const
+bool Enemy::serialize(OutputStream& stream) const
 {
-	std::string ret = "01234";
-	ret[0] = mCurState;
+	stream.reserve(sizeof(State) + sizeof(float));
+
+	stream << mCurState;
+	if (mCurState == State_Turning)
+		stream << mTargetAng;
+
+	return stream;
+}
+bool Enemy::deserialize(InputStream& stream)
+{
+	if (!stream >> mCurState)
+		return false;
 
 	if (mCurState == State_Turning)
-		std::memcpy(&ret[1], &mTargetAng, sizeof(float));
+		stream >> mTargetAng;
 
-	return ret;
-}
-bool Enemy::deserialize(const std::string& data)
-{
-	if (data.length() >= 0)
-	{
-		mCurState = State(data[0]);
-
-		if (mCurState == State_Turning)
-			std::memcpy(&mTargetAng, &data[1], sizeof(float));
-	}
-
-	return true;
+	return stream;
 }
 
 void Enemy::initialize()

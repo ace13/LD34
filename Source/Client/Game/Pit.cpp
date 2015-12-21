@@ -2,6 +2,9 @@
 
 #include "Level.hpp"
 
+#include <Core/InputStream.hpp>
+#include <Core/OutputStream.hpp>
+
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 
@@ -64,13 +67,16 @@ void Pit::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-std::string Pit::serialize() const
+bool Pit::serialize(OutputStream& stream) const
 {
-	return "";
+	return stream << mFull;
 }
-bool Pit::deserialize(const std::string& str)
+bool Pit::deserialize(InputStream& stream)
 {
-	return true;
+	bool b;
+	if (stream >> b)
+		mFull = b;
+	return stream;
 }
 
 void Pit::initialize()

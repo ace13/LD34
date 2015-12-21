@@ -21,6 +21,4 @@ private:
 
 	asILockableSharedBool* mWeakRef;
 	asIScriptObject* mObject;
-
-
 };

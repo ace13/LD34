@@ -2,7 +2,9 @@ SET(HEADERS
 	Engine.hpp
 	Engine.inl
 	FileWatcher.hpp
+	InputStream.hpp
 	Math.hpp
+	OutputStream.hpp
 	ScriptManager.hpp
 	ScriptManager.inl
 	Time.hpp

@@ -4,7 +4,9 @@
 #include "../ParticleManager.hpp"
 
 #include <Core/Engine.hpp>
+#include <Core/InputStream.hpp>
 #include <Core/Math.hpp>
+#include <Core/OutputStream.hpp>
 
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
@@ -74,16 +76,16 @@ void Door::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(shape, states);
 }
 
-std::string Door::serialize() const
+bool Door::serialize(OutputStream& stream) const
 {
-	return (mOpen ? "O" : "C");
-}
-bool Door::deserialize(const std::string& s)
-{
-	if (s.length() > 0)
-		mOpen = s[0] == 'O';
+	stream.reserve(sizeof(mOpen));
 
-	return true;
+	stream << mOpen;
+	return stream;
+}
+bool Door::deserialize(InputStream& stream)
+{
+	return stream >> mOpen;
 }
 
 void Door::initialize()
