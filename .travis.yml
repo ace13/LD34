@@ -1,0 +1,32 @@
+language: cpp
+sudo: required # Would work on containers, if they were trusty
+dist: trusty
+
+compiler:
+    - gcc
+    - clang
+
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - gcc-4.9
+            - g++-4.9
+            - libsfml-dev
+
+install:
+    - wget http://www.angelcode.com/angelscript/sdk/files/angelscript_2.30.2.zip
+    - unzip angelscript_2.30.2.zip
+    - cd sdk/angelscript/projects/gnuc
+    - make -j2
+    - PREFIX=$HOME/angelscript make install
+
+before_script:
+    - mkdir $TRAVIS_BUILD_DIR/build
+    - cd $TRAVIS_BUILD_DIR/build
+    - CC=gcc-4.9 CXX=g++-4.9 cmake .. -DAngelscript_INCLUDE_DIR=$HOME/angelscript/include -DAngelscript_LIBRARY_RELEASE=$HOME/angelscript/lib/libangelscript.a
+
+script:
+    - cd $TRAVIS_BUILD_DIR/build
+    - make -j2
