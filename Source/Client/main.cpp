@@ -1,6 +1,6 @@
 #include "Application.hpp"
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
 #ifdef WIN32
 	setlocale(LC_ALL, "");
@@ -8,7 +8,7 @@ int main(int argc, char** argv)
 
 	Application app;
 
-	app.init();
+	app.init(argc, argv);
 	app.run();
 
 	return 0;

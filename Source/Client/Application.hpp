@@ -7,6 +7,8 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include <list>
+
 class Application
 {
 public:
@@ -16,7 +18,7 @@ public:
 
 	Application& operator=(const Application&) = delete;
 
-	void init();
+	void init(int argc, const char** argv);
 
 	void run();
 
@@ -25,4 +27,5 @@ public:
 private:
 	Engine mEngine;
 	StateMachine mState;
+	std::list<std::string> mArgs;
 };

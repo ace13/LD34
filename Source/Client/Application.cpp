@@ -3,6 +3,7 @@
 
 #include "Game/ScriptEntity.hpp"
 
+#include "States/EditorState.hpp"
 #include "States/GameState.hpp"
 #include "States/IntroState.hpp"
 
@@ -180,8 +181,11 @@ Application::~Application()
 {
 }
 
-void Application::init()
+void Application::init(int argc, const char** argv)
 {
+	for (int i = 1; i < argc; ++i)
+		mArgs.push_back(argv[i]);
+
 	auto beg = Clock::now();
 	mEngine.init();
 
@@ -264,7 +268,10 @@ void Application::run()
 	}
 	window.setView(gameView);
 
-	mState.changeState<GameState>();
+	if (std::find(mArgs.begin(), mArgs.end(), "-b") != mArgs.end())
+		mState.changeState<EditorState>();
+	else
+		mState.changeState<GameState>();
 
 	gameView = window.getView();
 

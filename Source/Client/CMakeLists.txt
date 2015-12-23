@@ -26,6 +26,7 @@ SET(HEADERS
 	Menus/OptionMenu.hpp
 
 	States/IState.hpp
+	States/EditorState.hpp
 	States/GameState.hpp
 	States/IntroState.hpp
 	States/MenuState.hpp
@@ -56,6 +57,7 @@ SET(SOURCES
 	Menus/MainMenu.cpp
 	Menus/OptionMenu.cpp
 	
+	States/EditorState.cpp
 	States/GameState.cpp
 	States/IntroState.cpp
 	States/MenuState.cpp
