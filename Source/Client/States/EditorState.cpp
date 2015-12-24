@@ -5,6 +5,9 @@
 
 #include "../States/GameState.hpp"
 
+#include <Core/Engine.hpp>
+#include <Core/ScriptManager.hpp>
+
 #include <sstream>
 
 namespace
@@ -314,6 +317,7 @@ void EditorState::enter(sf::RenderTarget*)
 
 	bakeLevels(l);
 
+	getEngine().get<ScriptManager>().unloadAll();
 	getStateMachine()->changeState<GameState>(true);
 }
 void EditorState::exit(sf::RenderTarget*)
