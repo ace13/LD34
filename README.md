@@ -1,6 +1,8 @@
 BeatBots
 ========
 
+[![Travis Badge](https://travis-ci.org/ace13/LD34.svg?branch=master)](https://travis-ci.org/ace13/LD34)
+
 My Ludum Dare 34 entry.
 
 The themes are *Two Button Controls* and *Growing*
