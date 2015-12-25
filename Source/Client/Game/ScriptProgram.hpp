@@ -21,4 +21,6 @@ private:
 
 	asILockableSharedBool* mWeakRef;
 	asIScriptObject* mObject;
+
+	std::string mName;
 };

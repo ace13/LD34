@@ -15,7 +15,7 @@
 
 namespace
 {
-	void error(ScriptManager& sman, const asSMessageInfo* msg)
+	void error(ScriptManager&, const asSMessageInfo* msg)
 	{
 		std::cerr << "Angelscript ";
 		switch (msg->type)

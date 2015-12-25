@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ResourceManager.hpp"
+
 #include <Core/Time.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -14,7 +16,7 @@ public:
 	{
 		Timespan LifeTime;
 
-		sf::Vector2f Size;
+		sf::FloatRect TextureRect;
 		sf::Color StartColor, EndColor;
 		sf::Vector2f Gravity;
 		float Friction, Rotation;
@@ -26,6 +28,7 @@ public:
 	~ParticleManager();
 
 	void addParticle(const Particle& particle, const sf::Vector2f& pos, const sf::Vector2f& dir, float angle);
+	void setTexture(const ResourceManager::Texture& name);
 
 	void update(const Timespan& dt);
 	void draw(sf::RenderTarget& target);
@@ -43,4 +46,5 @@ private:
 	};
 
 	std::vector<ParticleImpl> mParticles;
+	ResourceManager::Texture mTexture;
 };

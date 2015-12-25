@@ -21,7 +21,7 @@ Goal::~Goal()
 
 }
 
-void Goal::tick(const Timespan& dt) { }
+void Goal::tick(const Timespan&) { }
 void Goal::update(const Timespan& dt)
 {
 	mTime += Time::Seconds(dt);

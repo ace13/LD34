@@ -20,7 +20,7 @@ namespace
 	static const ParticleManager::Particle OPEN_PARTICLE{
 		std::chrono::seconds(1),
 
-		{ 8, 8 },
+		{ 0, 0, 4, 4 },
 		{ 255, 128, 0 },
 		{ 255, 128, 0, 0},
 		{ },
@@ -39,8 +39,8 @@ Door::~Door()
 
 }
 
-void Door::tick(const Timespan& dt) { }
-void Door::update(const Timespan& dt) { }
+void Door::tick(const Timespan&) { }
+void Door::update(const Timespan&) { }
 void Door::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	if (mOpen)

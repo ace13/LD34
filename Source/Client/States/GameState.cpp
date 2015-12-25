@@ -26,7 +26,9 @@ namespace
 
 GameState::GameState() :
 	mEnded(false), mEndTimeout(0),
-	mNextExec(Clock::now()), mDot(0), mDir(-1)
+	mDot(0), mDir(-1), mOff(0),
+	mRT(nullptr),
+	mNextExec(Clock::now())
 {
 	explosionPrecache = new	ResourceManager::Sound;
 }

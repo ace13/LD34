@@ -18,11 +18,11 @@ Box::~Box()
 
 }
 
-void Box::tick(const Timespan& dt)
+void Box::tick(const Timespan&)
 {
 
 }
-void Box::update(const Timespan& dt)
+void Box::update(const Timespan&)
 {
 
 }

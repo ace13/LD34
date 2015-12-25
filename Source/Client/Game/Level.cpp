@@ -53,6 +53,20 @@ namespace
 
 			uint8_t ScriptNameLength;
 			uint16_t ScriptDataLength;
+
+			Header() :
+				Flags(0),
+				Rows(0),
+				Cols(0),
+				ObjCount(0),
+				ContainedFiles(0),
+				BackgroundColor(0),
+				ForegroundColor(0),
+				OutsideColor(0),
+				Scale(0),
+				ScriptNameLength(0),
+				ScriptDataLength(0)
+			{ }
 		};
 
 		struct ObjDef
@@ -78,15 +92,30 @@ namespace
 					uint8_t ScriptLength;
 					uint8_t ObjectNameLength;
 				} Script;
+				uint16_t DATA;
 			};
 
 			uint16_t SerializedDataLength;
+
+			ObjDef() :
+				Type(0),
+				PosX(0),
+				PosY(0),
+				Dir(0),
+				DATA(0),
+				SerializedDataLength(0)
+			{ }
 		};
 
 		struct ContainedFile
 		{
 			uint8_t NameLength;
 			uint16_t FileSize;
+
+			ContainedFile() :
+				NameLength(0),
+				FileSize(0)
+			{ }
 		};
 	};
 #pragma pack(pop)
@@ -480,7 +509,7 @@ bool Level::loadFromMemory(const void* data, size_t len)
 }
 bool Level::loadFromStream(sf::InputStream& reader)
 {
-	if (reader.getSize() < sizeof(OnDisk::Version) + sizeof(OnDisk::Header))
+	if (size_t(reader.getSize()) < sizeof(OnDisk::Version) + sizeof(OnDisk::Header))
 		return false;
 
 	OnDisk::Version version = {};
@@ -502,7 +531,7 @@ bool Level::loadFromStream(sf::InputStream& reader)
 		(lvlHeader.ContainedFiles * sizeof(OnDisk::ContainedFile))
 		);
 
-	if (reader.getSize() < minSize)
+	if (size_t(reader.getSize()) < minSize)
 		return false;
 
 	std::string levelScriptName(lvlHeader.ScriptNameLength, 0);

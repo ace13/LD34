@@ -15,7 +15,7 @@ Key::Key() :
 }
 Key::~Key() { }
 
-void Key::tick(const Timespan& dt) { }
+void Key::tick(const Timespan&) { }
 void Key::update(const Timespan& dt)
 {
 	mTime += Time::Seconds(dt);

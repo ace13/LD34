@@ -17,8 +17,8 @@ Pit::~Pit()
 
 }
 
-void Pit::tick(const Timespan& dt) { }
-void Pit::update(const Timespan& dt) { }
+void Pit::tick(const Timespan&) { }
+void Pit::update(const Timespan&) { }
 void Pit::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	states.transform *= getTransform();

@@ -45,6 +45,11 @@ private:
 	{
 		float Speed;
 		float Angle;
+
+		State() :
+			Speed(0),
+			Angle(0)
+		{ }
 	};
 
 	int mTick, mKeyCount;

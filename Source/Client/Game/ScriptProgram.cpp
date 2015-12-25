@@ -5,7 +5,7 @@
 
 ScriptProgram* ScriptProgram::createForScript(asIScriptModule* mod, const std::string& name)
 {
-
+	return nullptr;
 }
 
 ScriptProgram::ScriptProgram() :
@@ -21,12 +21,12 @@ ScriptProgram::~ScriptProgram()
 
 const std::string& ScriptProgram::getName() const
 {
-
+	return mName;
 }
 
 bool ScriptProgram::execute(const std::string& command, Robot& actor)
 {
-
+	return false;
 }
 
 void ScriptProgram::setScriptObject(asIScriptObject* obj)

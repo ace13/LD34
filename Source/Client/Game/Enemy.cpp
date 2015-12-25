@@ -16,7 +16,7 @@ namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
 		std::chrono::seconds(4),
-		{ 4, 8 },
+		{ 0, 0, 2, 4 },
 		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
@@ -68,12 +68,12 @@ void Enemy::tick(const Timespan& span)
 			auto* particles = getParticleManager();
 
 			sf::Vector2f x{
-				cos(getRotation() * Math::DEG2RAD),
-				sin(getRotation() * Math::DEG2RAD)
+				std::cos(getRotation() * Math::DEG2RAD),
+				std::sin(getRotation() * Math::DEG2RAD)
 			};
 			sf::Vector2f y{
-				cos(getRotation() * Math::DEG2RAD + Math::PI2),
-				sin(getRotation() * Math::DEG2RAD + Math::PI2)
+				std::cos(getRotation() * Math::DEG2RAD + Math::PI2),
+				std::sin(getRotation() * Math::DEG2RAD + Math::PI2)
 			};
 
 			auto& pos = getPosition();
@@ -82,7 +82,7 @@ void Enemy::tick(const Timespan& span)
 		}
 	}
 }
-void Enemy::update(const Timespan& dt)
+void Enemy::update(const Timespan&)
 {
 
 }

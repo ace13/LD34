@@ -24,7 +24,7 @@ namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
 		std::chrono::seconds(4),
-		{ 4, 2 },
+		{ 0, 0, 2, 1 },
 		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
@@ -70,7 +70,6 @@ void Robot::tick(const Timespan& span)
 		mState.Speed = mState.Speed / -2;
 	}
 
-	auto levelPos = getPosition() / getLevel()->getScale();
 	std::list<Entity*> standingOn;
 	if (getLevel()->findEntities(standingOn, *this))
 		for (auto& it : standingOn)
@@ -160,12 +159,12 @@ void Robot::tick(const Timespan& span)
 	if ((mTick++ % 3 == 0) && std::abs(mState.Speed) >= 0.1)
 	{
 		sf::Vector2f x{
-			cos(mState.Angle),
-			sin(mState.Angle)
+			std::cos(mState.Angle),
+			std::sin(mState.Angle)
 		};
 		sf::Vector2f y{
-			cos(mState.Angle + Math::PI2),
-			sin(mState.Angle + Math::PI2)
+			std::cos(mState.Angle + Math::PI2),
+			std::sin(mState.Angle + Math::PI2)
 		};
 
 		auto& pos = getPosition();
@@ -174,7 +173,7 @@ void Robot::tick(const Timespan& span)
 	}
 }
 
-void Robot::update(const Timespan& dt)
+void Robot::update(const Timespan&)
 {
 }
 

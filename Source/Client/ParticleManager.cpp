@@ -19,6 +19,11 @@ void ParticleManager::addParticle(const Particle& particle, const sf::Vector2f& 
 		mParticles.push_back({ &particle, Timespan(0), pos, dir, angle });
 }
 
+void ParticleManager::setTexture(const ResourceManager::Texture& texture)
+{
+	mTexture = texture;
+}
+
 void ParticleManager::update(const Timespan& span)
 {
 	float dt = Time::Seconds(span);
@@ -60,32 +65,43 @@ void ParticleManager::draw(sf::RenderTarget& target)
 	for (auto& it : mParticles)
 	{
 		float life = Time::Seconds(it.LifeTime) / Time::Seconds(it.Definition->LifeTime);
-		auto& pos = it.Position;
-		auto& s = it.Definition->Size;
+
+		const auto& pos = it.Position;
+		const auto& r = it.Definition->TextureRect;
+		const sf::Vector2f s{
+			r.width / 2, r.height / 2
+ 		};
 		auto col = lerpColor(it.Definition->StartColor, it.Definition->EndColor, life);
 
-		const sf::Vector2f Left{ cos(it.Angle), sin(it.Angle) };
-		const sf::Vector2f Top{ cos(it.Angle - Math::PI2), sin(it.Angle - Math::PI2) };
+		const sf::Vector2f Left{ std::cos(it.Angle), std::sin(it.Angle) };
+		const sf::Vector2f Top{ std::cos(it.Angle - Math::PI2), std::sin(it.Angle - Math::PI2) };
 
 		arr[i++] = {
-			it.Position - Top * s.y - Left * s.x,
-			col
+			pos - Top * s.x - Left * s.y,
+			col,
+			{ r.left, r.top }
 		};
 		arr[i++] = {
-			it.Position - Top * s.y + Left * s.x,
-			col
+			pos - Top * s.y + Left * s.x,
+			col,
+			{ r.left + r.width, r.top }
 		};
 		arr[i++] = {
-			it.Position + Top * s.y + Left * s.x,
-			col
+			pos + Top * s.y + Left * s.x,
+			col,
+			{ r.left + r.width, r.top + r.height }
 		};
 		arr[i++] = {
-			it.Position + Top * s.y - Left * s.x,
-			col
+			pos + Top * s.y - Left * s.x,
+			col,
+			{ r.left, r.top + r.height }
 		};
 	}
 
-	target.draw(arr);
+	sf::RenderStates states;
+	if (mTexture)
+		states.texture = (sf::Texture*)mTexture;
+	target.draw(arr, states);
 }
 
 void ParticleManager::clear()
