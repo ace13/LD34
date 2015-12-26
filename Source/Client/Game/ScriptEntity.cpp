@@ -340,8 +340,8 @@ void ScriptEntity::registerType(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "float get_Rotation() const", asMETHODPR(ScriptEntity, getRotation, () const, float), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void set_Rotation(float)", asMETHODPR(ScriptEntity, setRotation, (float), void), asCALL_THISCALL));
 
-		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Move(float,float)", asMETHODPR(ScriptEntity, move, (float,float), void), asCALL_THISCALL));
-		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Move(const sf::Vec2&in)", asMETHODPR(ScriptEntity, move, (const sf::Vector2f&), void), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool Move(float,float)", asMETHODPR(ScriptEntity, move, (float,float), bool), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "bool Move(const sf::Vec2&in,float=1)", asMETHODPR(ScriptEntity, move, (const sf::Vector2f&, float), bool), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Rotate(float)", asMETHODPR(ScriptEntity, rotate, (float), void), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("EntityType_t", "void Scale(const sf::Vec2&in)", asMETHODPR(ScriptEntity, scale, (const sf::Vector2f&), void), asCALL_THISCALL));
 

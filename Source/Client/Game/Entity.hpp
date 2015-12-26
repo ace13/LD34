@@ -38,8 +38,8 @@ public:
 
 
 	// Overridden transformable functions
-	void move(float, float);
-	void move(const sf::Vector2f&);
+	bool move(float, float);
+	bool move(const sf::Vector2f&, float scale = 1);
 
 	// Ref counting
 	int addRef();

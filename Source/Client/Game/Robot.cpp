@@ -24,7 +24,7 @@ namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
 		std::chrono::seconds(4),
-		{ 0, 0, 2, 1 },
+		{ 0, 0, 8, 4 },
 		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
@@ -59,12 +59,7 @@ void Robot::tick(const Timespan& span)
 
 	auto newPos = sf::Vector2f(cos(mState.Angle), sin(mState.Angle)) * mState.Speed * getLevel()->getScale() * dt;
 
-	auto checkPos = getPosition() + Math::Normalized(newPos) * getRadius() + newPos;
-	if (!getLevel()->isBlocked(uint8_t(checkPos.x / getLevel()->getScale()), uint8_t(checkPos.y / getLevel()->getScale())))
-	{
-		move(newPos);
-	}
-	else
+	if (!move(newPos))
 	{
 		mTargetState.Speed = 0;
 		mState.Speed = mState.Speed / -2;

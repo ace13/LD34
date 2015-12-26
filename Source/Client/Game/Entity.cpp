@@ -46,20 +46,24 @@ Entity::Entity() :
 Entity::~Entity() { }
 
 
-void Entity::move(float x, float y)
+bool Entity::move(float x, float y)
 {
 	sf::Vector2f vec{ x, y };
-	auto checkPos = (getPosition() + (Math::Normalized(vec) * getRadius()) + vec) / mLevel->getScale();
-	if (!mLevel->isBlocked(uint8_t(checkPos.x), uint8_t(checkPos.y)))
-		sf::Transformable::move(vec);
+	return move(vec);
 }
-void Entity::move(const sf::Vector2f& vec)
+bool Entity::move(const sf::Vector2f& vec, float scale)
 {
-	auto checkPos = (getPosition() + (Math::Normalized(vec) * getRadius()) + vec) / mLevel->getScale();
+	auto checkPos = (getPosition() + (Math::Normalized(vec) * getRadius()) + vec * scale) / mLevel->getScale();
 	if (!mLevel->isBlocked(uint8_t(checkPos.x), uint8_t(checkPos.y)))
+	{
 		sf::Transformable::move(vec);
-}
+		return true;
+	}
+	else if (scale > 0.25f)
+		return move(vec, scale / 2.f);
 
+	return false;
+}
 
 int Entity::addRef()
 {

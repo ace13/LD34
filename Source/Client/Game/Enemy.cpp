@@ -16,7 +16,7 @@ namespace
 {
 	static const ParticleManager::Particle TRACK_PARTICLE{
 		std::chrono::seconds(4),
-		{ 0, 0, 2, 4 },
+		{ 0, 0, 8, 16 },
 		{ 64, 64, 64, 197 },
 		{ 64, 64, 64, 0 },
 		{ 0, 0 },
@@ -55,10 +55,8 @@ void Enemy::tick(const Timespan& span)
 	else
 	{
 		auto newPos = sf::Vector2f(cos(getRotation() * Math::DEG2RAD), sin(getRotation() * Math::DEG2RAD)) * mSpeed * dt;
-		auto oldPos = getPosition();
-		move(newPos);
 
-		if (Math::Length(getPosition() - oldPos) < (mSpeed * dt) / 2)
+		if (!move(newPos))
 		{
 			mCurState = State_Turning;
 			mTargetAng = std::fmod((getRotation() + 180.f), 360.f);
