@@ -317,7 +317,6 @@ void Application::run()
 			else
 			{
 				mState.event(ev);
-				/*
 				if (ev.type == sf::Event::KeyPressed ||
 					ev.type == sf::Event::KeyReleased)
 				{
@@ -353,7 +352,7 @@ void Application::run()
 				{
 					man.runHook<uint32_t>("Text.Entered", ev.text.unicode);
 				}
-			*/}
+			}
 		}
 
 
@@ -412,6 +411,11 @@ template<>
 int ScriptManager::setCTXArg<const std::string*>(asIScriptContext* ctx, uint32_t id, const std::string* arg)
 {
 	return ctx->SetArgObject(id, (std::string*)arg);
+}
+template<>
+int ScriptManager::setCTXArg<const sf::Vector2f*>(asIScriptContext* ctx, uint32_t id, const sf::Vector2f* arg)
+{
+	return ctx->SetArgObject(id, (sf::Vector2f*)arg);
 }
 template<>
 int ScriptManager::setCTXArg<const Timespan*>(asIScriptContext* ctx, uint32_t id, const Timespan* arg)
