@@ -139,9 +139,10 @@ bool Box::getPenetration(const sf::Vector2f& pos, float radius, sf::Vector2f& ou
 	return true;
 }
 
-void Box::push(const sf::Vector2f& amount)
+bool Box::push(const sf::Vector2f& amount)
 {
-	move(amount);
+	if (!move(amount))
+		return false;
 
 	std::list<Entity*> ents;
 	if (getLevel()->findEntities(ents, *this))
@@ -160,8 +161,10 @@ void Box::push(const sf::Vector2f& amount)
 					pit->fill();
 
 					getLevel()->removeEntity(this);
-					return;
+					return true;
 				}
 			}
 	}
+
+	return true;
 }

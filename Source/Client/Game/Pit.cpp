@@ -95,6 +95,11 @@ const std::string& Pit::getName() const
 	return name;
 }
 
+bool Pit::isBackground() const
+{
+	return true;
+}
+
 bool Pit::isFull() const
 {
 	return mFull;

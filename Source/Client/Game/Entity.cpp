@@ -88,6 +88,10 @@ bool Entity::isCompleted() const
 {
 	return mIsCompleted;
 }
+bool Entity::isBackground() const
+{
+	return false;
+}
 
 void Entity::setGoal(bool isGoal)
 {

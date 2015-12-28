@@ -280,7 +280,7 @@ void Level::update(const Timespan& dt)
 	}
 	mDirty = false;
 }
-void Level::drawBackface(sf::RenderTarget& rt)
+void Level::drawBackface(sf::RenderTarget& rt) const
 {
 	sf::VertexArray foreground(sf::Quads, mSize.x * mSize.y * 4 + 4);
 
@@ -334,25 +334,17 @@ void Level::drawBackface(sf::RenderTarget& rt)
 
 	for (auto& it : mEntities)
 	{
-		if (it->getName() == "Pit")
+		if (it->isBackground())
 			rt.draw(*it);
-
-		if (mDirty)
-			break;
 	}
-	mDirty = false;
 }
-void Level::draw(sf::RenderTarget& rt)
+void Level::draw(sf::RenderTarget& rt) const
 {
 	for (auto& it : mEntities)
 	{
-		if (it->getName() != "Pit")
+		if (!it->isBackground())
 			rt.draw(*it);
-
-		if (mDirty)
-			break;
 	}
-	mDirty = false;
 }
 
 Level::operator bool() const

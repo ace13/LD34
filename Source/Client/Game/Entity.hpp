@@ -35,6 +35,7 @@ public:
 	virtual const std::string& getName() const = 0;
 	virtual bool isGoal() const;
 	virtual bool isCompleted() const;
+	virtual bool isBackground() const;
 
 
 	// Overridden transformable functions

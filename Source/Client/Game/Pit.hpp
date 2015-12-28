@@ -20,6 +20,8 @@ public:
 	virtual const std::type_info& getType() const;
 	virtual const std::string& getName() const;
 
+	virtual bool isBackground() const;
+
 	bool isFull() const;
 	void fill();
 

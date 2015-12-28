@@ -131,7 +131,9 @@ void Robot::tick(const Timespan& span)
 				{
 					pushVec /= 2.f;
 
-					test->push(pushVec);
+					if (!test->push(pushVec))
+						pushVec *= 2.f;
+
 					move(pushVec * -1.f);
 				}
 			}
