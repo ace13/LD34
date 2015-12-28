@@ -69,12 +69,6 @@ void Robot::tick(const Timespan& span)
 	if (getLevel()->findEntities(standingOn, *this))
 		for (auto& it : standingOn)
 		{
-			auto& otherpos = it->getPosition();
-			float dist = Math::Length(getPosition() - otherpos);
-
-			if (dist > getRadius() + it->getRadius() && it->getName() != "Box")
-				continue;
-
 			if (it->getName() == "Goal")
 			{
 				Goal* test = dynamic_cast<Goal*>(it);
@@ -103,7 +97,7 @@ void Robot::tick(const Timespan& span)
 			{
 				Door* test = (Door*)it;
 
-				if ((dist <= getRadius() + test->getRadius()/1.5) && !test->isOpen() && mKeyCount > 0)
+				if (!test->isOpen() && mKeyCount > 0)
 				{
 					--mKeyCount;
 					test->open();
@@ -131,8 +125,7 @@ void Robot::tick(const Timespan& span)
 				{
 					pushVec /= 2.f;
 
-					if (!test->push(pushVec))
-						pushVec *= 2.f;
+					test->push(pushVec);
 
 					move(pushVec * -1.f);
 				}
@@ -140,7 +133,7 @@ void Robot::tick(const Timespan& span)
 			else if (it->getName() == "Pit")
 			{
 				Pit* test = (Pit*)it;
-				if (!test->isFull() && dist < getRadius() + it->getRadius() * 0.75 && getLevel()->getNumberOfCompletedGoals() < getLevel()->getNumberOfGoals())
+				if (!test->isFull() && getLevel()->getNumberOfCompletedGoals() < getLevel()->getNumberOfGoals())
 				{
 					mPlayerSound.setBuffer(*mExplodeSound);
 					mPlayerSound.play();

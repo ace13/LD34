@@ -42,7 +42,7 @@ const std::string& Program::getName(const std::string& opcode) const
 
 Program* Program::createProgramming(const std::string& name)
 {
-	if (name == "BaseProgramming")
+	if (name == "BaseProgram")
 		return new BaseProgram();
 
 	std::cout << "Unknown programming " << name << std::endl;
