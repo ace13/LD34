@@ -1,7 +1,7 @@
 BeatBots
 ========
 
-[![Travis Badge](https://travis-ci.org/ace13/LD34.svg?branch=master)](https://travis-ci.org/ace13/LD34)
+[![Travis Badge](https://travis-ci.org/ace13/LD34.svg?branch=master)](https://travis-ci.org/ace13/LD34) | [Ludum Dare entry](http://ludumdare.com/compo/ludum-dare-34/?action=preview&uid=10247)
 
 This game was made as part of the Ludum Dare #34 compo, under 48 hours.
 Expect quality along those lines.
